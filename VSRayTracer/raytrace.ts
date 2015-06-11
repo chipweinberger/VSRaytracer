@@ -150,6 +150,7 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
 
         var normal = getNormal(obj, dest, intersection)
 
+<<<<<<< HEAD
         //if mirror
         if (<any> obj.material == <any> materials.mirror) {
 
@@ -165,6 +166,34 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
                 return new THREE.Vector3().addVectors(amb, trace(intersection, reflect_dest, recursive_depth + 1, originating_obj = obj))
             else
                 return amb
+=======
+        var difStrength = 0.0
+        var specStrength = 0.0
+        for (var j in lights) {
+
+            var light = lights[j]
+            var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize()
+
+            //check if in shadow
+            if (isShadowed(intersection, light.pos)){
+                continue
+            } else {
+
+                //diffuse
+                difStrength = normal.clone().dot(dirToLight) * light.strength
+
+                //specular
+                var reflection = dirToLight.clone().reflect(normal).normalize()
+                var theta = Math.max(reflection.dot(dir), 0)
+                var shny = obj.material.shiny
+                theta = Math.pow(theta, shny)
+                specStrength = theta * light.strength
+
+                //should scale by ligth distance here
+                var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+
+            }
+>>>>>>> master
 
         } else {
 
@@ -200,6 +229,21 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
 
         return new THREE.Vector3(0, 0, 0)
     }
+}
+
+
+function isShadowed(point, lightpos) {
+    var dirToLight = new THREE.Vector3().subVectors(lightpos, point).normalize();
+    var dest = new THREE.Vector3().addVectors(point, dirToLight)
+
+    for (var i in object_list) {
+        var obj = object_list[i]
+        var intersect = getIntersection(obj, point, dest)
+        if (intersect && intersect != point)
+            return true;
+    }
+    return false;
+
 }
 
 function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3) : any {
@@ -249,7 +293,9 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3) : any {
         case "plane":
             if (dir.y < 0) {
                 var t = org.y / dir.y * -1
-                return org.clone().add( dir.multiplyScalar(t) )
+                return org.clone().add(dir.multiplyScalar(t))
+            } else {
+                return null
             }
             
             
