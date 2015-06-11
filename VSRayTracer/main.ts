@@ -6,18 +6,19 @@
 
 //default parameters shared by raytracer and webgl
 var MAIN_pos = new THREE.Vector3(0, 4, 20)
-var MAIN_at = new THREE.Vector3(0, 3, 200).normalize()
-var MAIN_up = new THREE.Vector3(0, -200, 0).normalize()
+var MAIN_at = new THREE.Vector3(0, 0, -200).normalize()
+var MAIN_up = new THREE.Vector3(0, 200, 0).normalize()
 var MAIN_fov = 70
 
-var MAIN_transMatrix = new THREE.Matrix4().makeTranslation(MAIN_pos.x, MAIN_pos.y, MAIN_pos.z)
+var MAIN_transMatrix = new THREE.Matrix4().makeTranslation(-MAIN_pos.x, -MAIN_pos.y, -MAIN_pos.z)
 var MAIN_rotMatrix = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), MAIN_at, MAIN_up)
+var MAIN_rotTransMatrix = MAIN_rotMatrix.clone().multiply(MAIN_transMatrix)
+
 var MAIN_perspective = new THREE.Matrix4().makePerspective(MAIN_fov, 1, 0.1, 1000)
-var MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotMatrix).multiply(MAIN_transMatrix)
+var MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix)
 
 var object_list = [
-    { type: "sphere", pos: new THREE.Vector3(1, -1, -8), size: 2},
-    { type: "sphere", pos: new THREE.Vector3(0, -3, -6), size: 3},
+    { type: "sphere", pos: new THREE.Vector3(1, 1, -8), size: 1},
     { type: "plane", pos: new THREE.Vector3(0, 0, 0), at: new THREE.Vector3(0,1,0)}
 ]
 
@@ -66,7 +67,8 @@ window.addEventListener("keydown", function (ev) {
 
     //set view matrix
     MAIN_rotMatrix = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), MAIN_at, MAIN_up)
-    MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotMatrix).multiply(MAIN_transMatrix).multiply(MAIN_transMatrix)
+    MAIN_rotTransMatrix = MAIN_rotMatrix.clone().multiply(MAIN_transMatrix)
+    MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix)
 
 })function draw() {
 

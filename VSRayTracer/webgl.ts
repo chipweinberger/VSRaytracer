@@ -51,6 +51,7 @@ function initWebgl() {
 
 function renderWebgl() {
 
+
     camera.projectionMatrix = MAIN_viewMatrix
 
     renderer.render(scene, camera);
