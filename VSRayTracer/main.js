@@ -18,6 +18,7 @@ var materials = {
         diff: new THREE.Vector3(0.6, 0.0, 0.0),
         spec: new THREE.Vector3(0.6, 0.6, 0.6),
         shiny: 100,
+        mirror: new THREE.Vector3(0.3, 0.3, 0.3) //how strongly deos it reflect each color
     },
     brass: {
         emit: new THREE.Vector3(0, 0, 0),
@@ -25,12 +26,14 @@ var materials = {
         diff: new THREE.Vector3(0.780392, 0.568627, 0.113725),
         spec: new THREE.Vector3(0.992157, 0.941176, 0.807843),
         shiny: 27.8974,
+        mirror: new THREE.Vector3(0.6, 0.6, 0.6) //how strongly deos it reflect each color
     },
     mirror: {
         emit: new THREE.Vector3(0, 0, 0),
         amb: new THREE.Vector3(0, 0, 0),
         diff: new THREE.Vector3(0, 0, 0),
         spec: new THREE.Vector3(0, 0, 0),
+        mirror: new THREE.Vector3(1, 1, 1),
         shiny: 0,
     },
 };

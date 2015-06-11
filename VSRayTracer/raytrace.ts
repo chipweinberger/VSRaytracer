@@ -150,58 +150,58 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
 
         var normal = getNormal(obj, dest, intersection)
 
+        var difStrength = 0.0
+        var specStrength = 0.0
+        for (var j in lights) {
+
+            var light = lights[j]
+            var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize()
+
+            //check if in shadow
+            if (isShadowed(intersection, light.pos)) {
+                continue
+            } else {
+
+                //diffuse
+                difStrength = normal.clone().dot(dirToLight) * light.strength
+
+                //specular
+                var reflection = dirToLight.clone().reflect(normal).normalize()
+                var theta = Math.max(reflection.dot(dir), 0)
+                var shny = obj.material.shiny
+                theta = Math.pow(theta, shny)
+                specStrength = theta * light.strength
+
+                //should scale by ligth distance here
+                var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+
+            }
+        }
+
+        var phongColor = new THREE.Vector3(0, 0, 0)
+        phongColor.add(amb)
+        phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength))
+        phongColor.add(obj.material.spec.clone().multiplyScalar(specStrength))
+
 
         //if mirror
-        if (<any> obj.material == <any> materials.mirror) {
+        var mirrorColor = new THREE.Vector3(0, 0, 0)
+        if (    obj.material.mirror.length() > 0    ) {
 
             var reflection = dir.reflect(normal).normalize()
             var reflect_dest = intersection.clone().add(reflection)
 
             //shoot another ray
-            if (recursive_depth != MAIN_maxRecursion)
-                return new THREE.Vector3().addVectors(amb, trace(intersection, reflect_dest, recursive_depth + 1, originating_obj = obj))
-            else
-                return amb
-        } else {
-
-            //phong shading
-
-            var difStrength = 0.0
-            var specStrength = 0.0
-            for (var j in lights) {
-
-                var light = lights[j]
-                var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize()
-
-                //check if in shadow
-                if (isShadowed(intersection, light.pos)) {
-                    continue
-                } else {
-
-                    //diffuse
-                    difStrength = normal.clone().dot(dirToLight) * light.strength
-
-                    //specular
-                    var reflection = dirToLight.clone().reflect(normal).normalize()
-                    var theta = Math.max(reflection.dot(dir), 0)
-                    var shny = obj.material.shiny
-                    theta = Math.pow(theta, shny)
-                    specStrength = theta * light.strength
-
-                    //should scale by ligth distance here
-                    var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
-
-                }
+            if (recursive_depth != MAIN_maxRecursion) {
+                mirrorColor = trace(intersection, reflect_dest, recursive_depth + 1, originating_obj = obj)
+                mirrorColor.x *= obj.material.mirror.x
+                mirrorColor.y *= obj.material.mirror.y
+                mirrorColor.z *= obj.material.mirror.z
             }
 
-            var phongColor = new THREE.Vector3(0, 0, 0)
-            phongColor.add(amb)
-            phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength))
-            phongColor.add(obj.material.spec.clone().multiplyScalar(specStrength))
-
-            return phongColor
-
         }
+
+        return new THREE.Vector3(0, 0, 0).addVectors(phongColor,mirrorColor)
 
     //no collision with object
     } else {
