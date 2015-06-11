@@ -1,0 +1,6 @@
+C:\Users\LW520\Desktop\EECS raytracer\VSRayTracer\VSRayTracer\obj\Debug\VSRayTracer.csprojResolveAssemblyReference.cache
+C:\Users\LW520\Desktop\EECS raytracer\VSRayTracer\VSRayTracer\bin\VSRayTracer.dll.config
+C:\Users\LW520\Desktop\EECS raytracer\VSRayTracer\VSRayTracer\bin\VSRayTracer.dll
+C:\Users\LW520\Desktop\EECS raytracer\VSRayTracer\VSRayTracer\bin\VSRayTracer.pdb
+C:\Users\LW520\Desktop\EECS raytracer\VSRayTracer\VSRayTracer\obj\Debug\VSRayTracer.dll
+C:\Users\LW520\Desktop\EECS raytracer\VSRayTracer\VSRayTracer\obj\Debug\VSRayTracer.pdb
