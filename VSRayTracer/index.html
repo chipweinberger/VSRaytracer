@@ -27,84 +27,12 @@
     #
     <script>
 
-        //default parameters shared by raytracer and webgl
-
-        var MAIN_pos = new THREE.Vector3(0,2,2)
-        var MAIN_at = new THREE.Vector3(0,1,-200)
-        var MAIN_up = new THREE.Vector3(0, 200, 0)
-        var MAIN_fov = 70
-
-        var MAIN_transMatrix = new THREE.Matrix4().makeTranslation( MAIN_pos.x, MAIN_pos.y, MAIN_pos.z)
-        var MAIN_rotMatrix = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), MAIN_at, MAIN_up)
-        var MAIN_perspective = new THREE.Matrix4().makePerspective(MAIN_fov, 1, 0.1, 1000)
-        var MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotMatrix).multiply(MAIN_transMatrix)
-
-        window.addEventListener("keydown", function (ev) {
-
-            var rotSpeed = 0.07;
-            var transSpeed = .06;
-
-            var transX = new THREE.Matrix4().makeTranslation(transSpeed, 0, 0)
-            var transY = new THREE.Matrix4().makeTranslation(0, transSpeed, 0)
-            var transZ = new THREE.Matrix4().makeTranslation(0, 0, transSpeed)
-
-            var rotX = new THREE.Matrix4().makeRotationX(rotSpeed)
-            var rotY = new THREE.Matrix4().makeRotationY(rotSpeed)
-            var rotZ = new THREE.Matrix4().makeRotationZ(rotSpeed)
-
-
-            var speed = 2
-            switch (ev.keyCode) {
-                case 84://t
-                    raytrace(); break;
-                case 39://right arrow
-                    MAIN_rotMatrix.multiply(rotY); break;
-                case 37://left arrow
-                    MAIN_rotMatrix.multiply(new THREE.Matrix4().getInverse(rotY)); break;
-                case 38://up arrow
-                    MAIN_rotMatrix.multiply(rotX); break;
-                case 40://down arrow
-                    MAIN_rotMatrix.multiply(new THREE.Matrix4().getInverse(rotX)); break;
-                case 65://a
-                    MAIN_transMatrix.multiply(transX); break;
-                case 90://z
-                    MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transX)); break;
-                case 83://s           
-                    MAIN_transMatrix.multiply(transY); break;
-                case 88://x           
-                    MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transY)); break;
-                case 68://d           
-                    MAIN_transMatrix.multiply(transZ); break;
-                case 67://c           
-                    MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transZ)); break;
-                case 70://f
-                    MAIN_rotMatrix.multiply(rotZ); break;
-                case 86://v
-                    MAIN_rotMatrix.multiply(new THREE.Matrix4().getInverse(rotZ)); break;
-            }
-
-            //set view matrix
-            MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotMatrix).multiply(MAIN_transMatrix)
-
-            console.log(new THREE.Matrix4().multiplyMatrices(MAIN_rotMatrix, MAIN_transMatrix))
-
-            console.log(MAIN_viewMatrix)
-
-        })        function draw() {
-
-            renderWebgl();
-
-            window.requestAnimationFrame(draw);
-
-        }        function main() {            initWebgl();            initRaytrace();
-            window.requestAnimationFrame(draw);
-
-        }
+
 
     </script>
     
     
-     			
+    <script src="main.js"></script>			
     <script src="raytrace.js"></script>
     <script src="webgl.js"></script>				
 </body>
