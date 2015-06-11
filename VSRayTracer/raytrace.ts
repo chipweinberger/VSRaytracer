@@ -76,9 +76,11 @@ function raytraceBlocking(x, width, height,  upper_left) {
                 var dest = upper_left.clone().applyMatrix4(RotXY)
 
                 //apply view matrix
-                var tt = new THREE.Matrix4().multiplyMatrices(MAIN_transMatrix, MAIN_rotMatrix)
-                org.applyMatrix4(tt)
-                dest.applyMatrix4(tt)
+                org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rotMatrix))
+                org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_transMatrix))
+
+                dest.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rotMatrix))
+                dest.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_transMatrix))
 
                 var color = trace(org, dest)
                 color.divideScalar(antialiasing.n * antialiasing.n)
@@ -135,22 +137,21 @@ function trace(org, dest) {
             difStrength = normal.clone().dot(dirToLight) * light.strength
 
             //specular
-            //var reflection = dirToLight.clone().reflect(normal).normalize()
-            //var theta = Math.abs(reflection.dot(dir))
-            //var shny = obj.material.shiny
-            //theta = Math.pow(theta, shny)
-            //specStrength = theta * light.strength
+            var reflection = dirToLight.clone().reflect(normal).normalize()
+            var theta = Math.max(reflection.dot(dir),0)
+            var shny = obj.material.shiny
+            theta = Math.pow(theta, shny)
+            specStrength = theta * light.strength
 
             //should scale by ligth distance here
             var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
-            console.log(distToLight)
 
         }
 
         var phongColor = new THREE.Vector3(0, 0, 0)
         phongColor.add(amb)
-        phongColor.add( obj.material.diff.multiplyScalar(difStrength) )
-       // phongColor.add( obj.material.spec.multiplyScalar(specStrength) )
+        phongColor.add( obj.material.diff.clone().multiplyScalar(difStrength) )
+        phongColor.add( obj.material.spec.clone().multiplyScalar(specStrength) )
 
         return phongColor
     } else {
@@ -161,8 +162,8 @@ function trace(org, dest) {
 
 function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3) : any {
 
-    var org = org.clone().add(obj.pos)
-    var dest = dest.clone().add(obj.pos)
+    var org = org.clone().sub(obj.pos)
+    var dest = dest.clone().sub(obj.pos)
     var dir = new THREE.Vector3().subVectors(dest, org).normalize()
 
     switch (obj.type) {
@@ -177,13 +178,13 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3) : any {
             var disc = (b * b) - ( a * c)
             if (disc > 0) {
 
-
+                //return new THREE.Vector3(1,1,1)
             
-                var t0 = (-b + Math.sqrt(b * b - 4 * c)) / 2
-                var t1 = (-b - Math.sqrt(b * b - 4 * c)) / 2
+                var t0 = (-b)/a  + Math.sqrt(b * b - a * c) / (a)
+                var t1 = (-b)/a  - Math.sqrt(b * b - a * c) / (a)
             
-                var p0 = org.add(dir.clone().multiplyScalar(t0))
-                var p1 = org.add(dir.clone().multiplyScalar(t0))
+                var p0 = org.clone().add(dir.clone().multiplyScalar(t0)).add(obj.pos)
+                var p1 = org.clone().add(dir.clone().multiplyScalar(t1)).add(obj.pos)
             
                 var len0 = new THREE.Vector3().subVectors(p0, org).length()
                 var len1 = new THREE.Vector3().subVectors(p1, org).length()
@@ -198,8 +199,8 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3) : any {
             break;
         case "plane":
             if (dir.y < 0) {
-                var t = (org.y*-1) / dir.y
-                return org.add( dir.multiplyScalar(t) )
+                var t = org.y / dir.y * -1
+                return org.clone().add( dir.multiplyScalar(t) )
             }
             
             

@@ -5,6 +5,11 @@ var camera, scene, renderer, mesh;
 var cameraPerspective;
 var renderer;
 function initWebgl() {
+    camera = new THREE.PerspectiveCamera(70, 1, 0.1, 1000);
+    camera.position.set(0, 4, 20);
+    camera.up.set = new THREE.Vector3(0, 0, -1);
+    camera.lookAt(new THREE.Vector3(0, 0, -1));
+    console.log(camera.projectionMatrix);
     // renderer
     renderer = new THREE.WebGLRenderer({ canvas: canvas });
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
