@@ -49,7 +49,7 @@ function raytraceBlocking(x, width, height, upper_left) {
                 org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_transMatrix));
                 dest.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rotMatrix));
                 dest.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_transMatrix));
-                var color = trace(org, dest);
+                var color = trace(org, dest, 0);
                 color.divideScalar(antialiasing.n * antialiasing.n);
                 avg_pix.add(color);
             }
@@ -61,48 +61,80 @@ function raytraceBlocking(x, width, height, upper_left) {
         ctx.fillRect(x, y, 1, 1);
     }
 }
+var addline = function (p1, p2) {
+    var material = new THREE.LineBasicMaterial({
+        color: 0x0000ff
+    });
+    var dir = new THREE.Vector3().subVectors(p2, p1);
+    var geometry = new THREE.Geometry();
+    //geometry.vertices.push(p1, p2);
+    geometry.vertices.push(p1, new THREE.Vector3().addVectors(p1, dir.multiplyScalar(4)));
+    var line = new THREE.Line(geometry, material);
+    scene.add(line);
+};
 //traces a single ray
-function trace(org, dest) {
+function trace(org, dest, recursive_depth, originating_obj) {
+    if (originating_obj === void 0) { originating_obj = null; }
     var dir = new THREE.Vector3().subVectors(dest, org);
     var nearestObj = null;
     var dist = 99999999;
+    var nearestIntersection = null;
     for (var i in object_list) {
         var obj = object_list[i];
+        if (obj == originating_obj)
+            continue; //no interreflection
         var intersection = getIntersection(obj, org, dest);
-        if (intersection) {
+        if (intersection && intersection != org) {
             var d = new THREE.Vector3().subVectors(intersection, dir).length();
             if (d < dist) {
                 dist = d;
                 nearestObj = obj;
+                nearestIntersection = intersection;
             }
         }
     }
     if (nearestObj) {
+        intersection = nearestIntersection;
         //phong shading
         obj = nearestObj;
         var amb = obj.material.amb;
         var normal = getNormal(obj, dest, intersection);
-        var difStrength;
-        var specStrength;
-        for (var j in lights) {
-            var light = lights[j];
-            //diffuse
-            var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize();
-            difStrength = normal.clone().dot(dirToLight) * light.strength;
-            //specular
-            var reflection = dirToLight.clone().reflect(normal).normalize();
-            var theta = Math.max(reflection.dot(dir), 0);
-            var shny = obj.material.shiny;
-            theta = Math.pow(theta, shny);
-            specStrength = theta * light.strength;
-            //should scale by ligth distance here
-            var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+        //if mirror
+        if (obj.material == materials.mirror) {
+            var reflection = dir.reflect(normal).normalize();
+            var reflect_dest = intersection.clone().add(reflection);
+            //addline(org, intersection)
+            //addline(intersection, reflect_dest)
+            //addline(intersection, intersection.clone().add(normal) );
+            //shoot another ray
+            if (recursive_depth != MAIN_maxRecursion)
+                return new THREE.Vector3().addVectors(amb, trace(intersection, reflect_dest, recursive_depth + 1, originating_obj = obj));
+            else
+                return amb;
         }
-        var phongColor = new THREE.Vector3(0, 0, 0);
-        phongColor.add(amb);
-        phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength));
-        phongColor.add(obj.material.spec.clone().multiplyScalar(specStrength));
-        return phongColor;
+        else {
+            var difStrength;
+            var specStrength;
+            for (var j in lights) {
+                var light = lights[j];
+                //diffuse
+                var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize();
+                difStrength = normal.clone().dot(dirToLight) * light.strength;
+                //specular
+                var reflection = dirToLight.clone().reflect(normal).normalize();
+                var theta = Math.max(reflection.dot(dir), 0);
+                var shny = obj.material.shiny;
+                theta = Math.pow(theta, shny);
+                specStrength = theta * light.strength;
+                //should scale by ligth distance here
+                var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+            }
+            var phongColor = new THREE.Vector3(0, 0, 0);
+            phongColor.add(amb);
+            phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength));
+            phongColor.add(obj.material.spec.clone().multiplyScalar(specStrength));
+            return phongColor;
+        }
     }
     else {
         return new THREE.Vector3(0, 0, 0);
@@ -123,14 +155,25 @@ function getIntersection(obj, org, dest) {
                 //return new THREE.Vector3(1,1,1)
                 var t0 = (-b) / a + Math.sqrt(b * b - a * c) / (a);
                 var t1 = (-b) / a - Math.sqrt(b * b - a * c) / (a);
-                var p0 = org.clone().add(dir.clone().multiplyScalar(t0)).add(obj.pos);
-                var p1 = org.clone().add(dir.clone().multiplyScalar(t1)).add(obj.pos);
+                var p0 = org.clone().add(dir.clone().multiplyScalar(t0));
+                var p1 = org.clone().add(dir.clone().multiplyScalar(t1));
                 var len0 = new THREE.Vector3().subVectors(p0, org).length();
                 var len1 = new THREE.Vector3().subVectors(p1, org).length();
-                if (len0 < len1)
-                    return p0;
-                else
-                    return p1;
+                //only allow rays to move forward in time
+                var candidates = [];
+                if (t0 > 0)
+                    candidates.push(p0.add(obj.pos));
+                if (t1 > 0)
+                    candidates.push(p1.add(obj.pos));
+                if (candidates.length == 2) {
+                    if (len0 < len1)
+                        return p0;
+                    else
+                        return p1;
+                }
+                else {
+                    return candidates[0];
+                }
             }
             else {
                 return null;

@@ -17,6 +17,8 @@ var MAIN_rotTransMatrix = MAIN_rotMatrix.clone().multiply(MAIN_transMatrix)
 var MAIN_perspective = new THREE.Matrix4().makePerspective(MAIN_fov, 1, 0.1, 1000)
 var MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix)
 
+var MAIN_maxRecursion = 2
+
 
 var materials = {
     redplastic: {
@@ -33,6 +35,13 @@ var materials = {
         spec: new THREE.Vector3(0.992157, 0.941176, 0.807843),
         shiny: 27.8974,
     },
+    mirror: {
+        emit: new THREE.Vector3(0, 0, 0),
+        amb: new THREE.Vector3(0, 0, 0),
+        diff: new THREE.Vector3(0, 0, 0),
+        spec: new THREE.Vector3(0, 0, 0),
+        shiny: 0,
+    },
 
 }
 
@@ -45,7 +54,8 @@ var lights = [
 ]
 
 var object_list = [
-    { type: "sphere", pos: new THREE.Vector3(1, 1, -8), size: 1, material: materials.redplastic},
+    { type: "sphere", pos: new THREE.Vector3(1, 1, -8), size: 1, material: materials.redplastic },
+    { type: "sphere", pos: new THREE.Vector3(3, 1, -8), size: 1, material: materials.mirror},
     { type: "plane", pos: new THREE.Vector3(0, 0, 0), at: new THREE.Vector3(0, 1, 0), material: materials.brass}
 ]
 
@@ -97,13 +107,22 @@ window.addEventListener("keydown", function (ev) {
     MAIN_rotTransMatrix = MAIN_rotMatrix.clone().multiply(MAIN_transMatrix)
     MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix)
 
-})function draw() {
+})
+
+function draw() {
 
     renderWebgl();
 
     window.requestAnimationFrame(draw);
 
-}function main() {    initWebgl();    initRaytrace();
+}
+
+
+function main() {
+
+    initWebgl();
+    initRaytrace();
+
     window.requestAnimationFrame(draw);
 
 } 
