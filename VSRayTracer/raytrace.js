@@ -62,19 +62,55 @@ function raytraceBlocking(x, width, height, upper_left) {
 }
 //traces a single ray
 function trace(org, dest) {
+    var dir = new THREE.Vector3().subVectors(dest, org);
+    var nearestObj = null;
+    var dist = 99999999;
     for (var i in object_list) {
         var obj = object_list[i];
         var intersection = getIntersection(obj, org, dest);
-        if (intersection)
-            return new THREE.Vector3(.5, .5, .5);
-        else
-            return new THREE.Vector3(0, 1, 0);
+        if (intersection) {
+            var d = new THREE.Vector3().subVectors(intersection, dir).length();
+            if (d < dist) {
+                dist = d;
+                nearestObj = obj;
+            }
+        }
+    }
+    if (nearestObj) {
+        //phong shading
+        obj = nearestObj;
+        var amb = obj.material.amb;
         var normal = getNormal(obj, dest, intersection);
+        var difStrength;
+        var specStrength;
+        for (var j in lights) {
+            var light = lights[j];
+            //diffuse
+            var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize();
+            difStrength = normal.clone().dot(dirToLight) * light.strength;
+            //specular
+            //var reflection = dirToLight.clone().reflect(normal).normalize()
+            //var theta = Math.abs(reflection.dot(dir))
+            //var shny = obj.material.shiny
+            //theta = Math.pow(theta, shny)
+            //specStrength = theta * light.strength
+            //should scale by ligth distance here
+            var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+            console.log(distToLight);
+        }
+        var phongColor = new THREE.Vector3(0, 0, 0);
+        phongColor.add(amb);
+        phongColor.add(obj.material.diff.multiplyScalar(difStrength));
+        // phongColor.add( obj.material.spec.multiplyScalar(specStrength) )
+        return phongColor;
+    }
+    else {
+        return new THREE.Vector3(0, 0, 0);
     }
 }
 function getIntersection(obj, org, dest) {
-    org.add(obj.pos);
-    dest.add(obj.pos);
+    var org = org.clone().add(obj.pos);
+    var dest = dest.clone().add(obj.pos);
     var dir = new THREE.Vector3().subVectors(dest, org).normalize();
     switch (obj.type) {
         case "sphere":
@@ -84,7 +120,6 @@ function getIntersection(obj, org, dest) {
             var c = (org.length() * org.length()) - obj.size;
             var disc = (b * b) - (a * c);
             if (disc > 0) {
-                return true;
                 var t0 = (-b + Math.sqrt(b * b - 4 * c)) / 2;
                 var t1 = (-b - Math.sqrt(b * b - 4 * c)) / 2;
                 var p0 = org.add(dir.clone().multiplyScalar(t0));
@@ -99,24 +134,23 @@ function getIntersection(obj, org, dest) {
             else {
                 return null;
             }
-            // var r = new THREE.Ray(org, dir)
-            // var dist = r.distanceToPoint(obj.pos)
-            //
-            // if (dist < obj.size)
-            //     return true;
-            // else
-            //     return false;
             break;
         case "plane":
-            break;
+            if (dir.y < 0) {
+                var t = (org.y * -1) / dir.y;
+                return org.add(dir.multiplyScalar(t));
+            }
     }
 }
 function getNormal(obj, dest, intersection) {
     switch (obj.type) {
         case "sphere":
+            return new THREE.Vector3().subVectors(intersection, obj.pos).normalize();
             break;
         case "plane":
+            return new THREE.Vector3(0, 1, 0);
             break;
     }
+    return new THREE.Vector3();
 }
 //# sourceMappingURL=raytrace.js.map

@@ -17,9 +17,36 @@ var MAIN_rotTransMatrix = MAIN_rotMatrix.clone().multiply(MAIN_transMatrix)
 var MAIN_perspective = new THREE.Matrix4().makePerspective(MAIN_fov, 1, 0.1, 1000)
 var MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix)
 
+
+var materials = {
+    redplastic: {
+        emit: new THREE.Vector3(0, 0, 0),
+        amb: new THREE.Vector3(0.1, 0.1, 0.1),
+        diff: new THREE.Vector3(0.6, 0.0, 0.0),
+        spec: new THREE.Vector3(0.6, 0.6, 0.6),
+        shiny: 100,
+    },
+    brass: {
+        emit: new THREE.Vector3(0, 0, 0),
+        amb: new THREE.Vector3(0.329412, 0.223529, 0.027451),
+        diff: new THREE.Vector3(0.780392, 0.568627, 0.113725),
+        spec: new THREE.Vector3(0.992157, 0.941176, 0.807843),
+        shiny: 27.8974,
+    },
+
+}
+
+var lights = [
+    {
+        pos: new THREE.Vector3(0, 2, 0),
+        color: new THREE.Vector3(1, 1, 1),
+        strength: .8
+    }
+]
+
 var object_list = [
-    { type: "sphere", pos: new THREE.Vector3(1, 1, -8), size: 1},
-    { type: "plane", pos: new THREE.Vector3(0, 0, 0), at: new THREE.Vector3(0,1,0)}
+    { type: "sphere", pos: new THREE.Vector3(1, 1, -8), size: 1, material: materials.redplastic},
+    { type: "plane", pos: new THREE.Vector3(0, 0, 0), at: new THREE.Vector3(0, 1, 0), material: materials.brass}
 ]
 
 window.addEventListener("keydown", function (ev) {
