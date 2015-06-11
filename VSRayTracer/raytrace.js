@@ -99,14 +99,10 @@ function trace(org, dest, recursive_depth, originating_obj) {
         obj = nearestObj;
         var amb = obj.material.amb;
         var normal = getNormal(obj, dest, intersection);
-<<<<<<< HEAD
         //if mirror
         if (obj.material == materials.mirror) {
             var reflection = dir.reflect(normal).normalize();
             var reflect_dest = intersection.clone().add(reflection);
-            //addline(org, intersection)
-            //addline(intersection, reflect_dest)
-            //addline(intersection, intersection.clone().add(normal) );
             //shoot another ray
             if (recursive_depth != MAIN_maxRecursion)
                 return new THREE.Vector3().addVectors(amb, trace(intersection, reflect_dest, recursive_depth + 1, originating_obj = obj));
@@ -114,43 +110,34 @@ function trace(org, dest, recursive_depth, originating_obj) {
                 return amb;
         }
         else {
-            var difStrength;
-            var specStrength;
+            //phong shading
+            var difStrength = 0.0;
+            var specStrength = 0.0;
             for (var j in lights) {
                 var light = lights[j];
-                //diffuse
                 var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize();
-=======
-        var difStrength = 0.0;
-        var specStrength = 0.0;
-        for (var j in lights) {
-            var light = lights[j];
-            var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize();
-            //check if in shadow
-            if (isShadowed(intersection, light.pos)) {
-                continue;
+                //check if in shadow
+                if (isShadowed(intersection, light.pos)) {
+                    continue;
+                }
+                else {
+                    //diffuse
+                    difStrength = normal.clone().dot(dirToLight) * light.strength;
+                    //specular
+                    var reflection = dirToLight.clone().reflect(normal).normalize();
+                    var theta = Math.max(reflection.dot(dir), 0);
+                    var shny = obj.material.shiny;
+                    theta = Math.pow(theta, shny);
+                    specStrength = theta * light.strength;
+                    //should scale by ligth distance here
+                    var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+                }
             }
-            else {
-                //diffuse
->>>>>>> master
-                difStrength = normal.clone().dot(dirToLight) * light.strength;
-                //specular
-                var reflection = dirToLight.clone().reflect(normal).normalize();
-                var theta = Math.max(reflection.dot(dir), 0);
-                var shny = obj.material.shiny;
-                theta = Math.pow(theta, shny);
-                specStrength = theta * light.strength;
-                //should scale by ligth distance here
-                var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
-            }
-<<<<<<< HEAD
             var phongColor = new THREE.Vector3(0, 0, 0);
             phongColor.add(amb);
             phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength));
             phongColor.add(obj.material.spec.clone().multiplyScalar(specStrength));
             return phongColor;
-=======
->>>>>>> master
         }
     }
     else {
@@ -163,8 +150,11 @@ function isShadowed(point, lightpos) {
     for (var i in object_list) {
         var obj = object_list[i];
         var intersect = getIntersection(obj, point, dest);
-        if (intersect && intersect != point)
-            return true;
+        if (intersect) {
+            var dist = new THREE.Vector3().subVectors(point, intersect).length();
+            if (dist > 0.001)
+                return true;
+        }
     }
     return false;
 }
