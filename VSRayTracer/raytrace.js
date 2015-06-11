@@ -82,10 +82,10 @@ function trace(org, dest, recursive_depth, originating_obj) {
     for (var i in object_list) {
         var obj = object_list[i];
         if (obj == originating_obj)
-            continue; //no interreflection
+            continue; //no interreflection for now. alternatively: round small errors as zero distance
         var intersection = getIntersection(obj, org, dest);
         if (intersection && intersection != org) {
-            var d = new THREE.Vector3().subVectors(intersection, dir).length();
+            var d = new THREE.Vector3().subVectors(intersection, org).length();
             if (d < dist) {
                 dist = d;
                 nearestObj = obj;

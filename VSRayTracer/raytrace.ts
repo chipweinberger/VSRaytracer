@@ -126,13 +126,13 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
 
         var obj = object_list[i]
         if (obj == originating_obj)
-            continue//no interreflection
+           continue//no interreflection for now. alternatively: round small errors as zero distance
 
         var intersection = getIntersection(obj, org, dest)
 
         if (intersection && intersection != org) {
-            var d = new THREE.Vector3().subVectors(intersection, dir).length()
-            if (d < dist) {
+            var d = new THREE.Vector3().subVectors(intersection, org).length()
+            if (d < dist){// && d > 0.01) {//floating point errors mean we should check if d is really small and treat it as zero
                 dist = d
                 nearestObj = obj
                 nearestIntersection = intersection
