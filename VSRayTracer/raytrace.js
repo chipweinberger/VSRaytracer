@@ -200,7 +200,7 @@ function getIntersection(obj, org, dest) {
             var cen = obj.pos;
             var a = dir.length() * dir.length();
             var b = org.dot(dir);
-            var c = (org.length() * org.length()) - obj.size;
+            var c = (org.length() * org.length()) - 1;
             var disc = (b * b) - (a * c);
             if (disc > 0) {
                 //return new THREE.Vector3(1,1,1)

@@ -286,7 +286,7 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
             var cen = obj.pos
             var a = dir.length() * dir.length()
             var b = org.dot(dir)
-            var c = (org.length() * org.length()) - obj.size
+            var c = (org.length() * org.length()) - 1
             
             
             var disc = (b * b) - ( a * c)
