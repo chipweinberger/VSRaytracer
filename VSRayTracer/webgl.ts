@@ -45,6 +45,8 @@ function initWebgl() {
                 var sp = new THREE.Mesh(new THREE.SphereGeometry(1, 100, 100), new THREE.MeshNormalMaterial());
                 sp.position.set(obj.pos.x, obj.pos.y, obj.pos.z)
                 sp.scale.set(obj.scale.x, obj.scale.y, obj.scale.z)
+                sp["assoc_light"] = obj
+                lightSphere.push(sp)
                 scene.add(sp);
                 break;
             case "plane":

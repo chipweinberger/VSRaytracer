@@ -86,14 +86,14 @@ var materials = {
     },
     glass: {
         emit: new THREE.Vector3(0, 0, 0),
-        amb: new THREE.Vector3(0.0, 0, 0),
-        diff: new THREE.Vector3(1.7, 1.7, 1.7),
-        spec: new THREE.Vector3(.3, .3, .3),
+        amb: new THREE.Vector3(0.07, 0.11, 0.07),
+        diff: new THREE.Vector3(0.0, 0.0, 0.0),
+        spec: new THREE.Vector3(.5, .5, .5),
         mirror: new THREE.Vector3(0, 0, 0),
-        shiny: 10,
-        texture: "tiger",
-        transmission: .98,
-        indexOfRefraction: 1.52,
+        shiny: 20,
+        texture: null,
+        transmission: .8,
+        indexOfRefraction: 1.4,
     }
 };
 function addAreaLight(pos, dir, length, color, strength, samples, jittered) {
@@ -135,31 +135,32 @@ var lights = [
     {
         pos: new THREE.Vector3(2, 2, 0),
         color: new THREE.Vector3(1, 1, 1),
-        strength: .8,
+        strength: 1.8,
         on: true,
     },
     {
         pos: new THREE.Vector3(-6, 10, -8),
         color: new THREE.Vector3(1, 1, 0),
-        strength: .8,
+        strength: 1.8,
         on: false,
     },
     {
         pos: new THREE.Vector3(-2, 2, -3),
         color: new THREE.Vector3(1, 1, 1),
-        strength: .8,
+        strength: 1.8,
         on: false,
     }
 ];
 var object_list = [
     { type: "plane", pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
     { type: "sphere", pos: new THREE.Vector3(-4, .3, -6), scale: new THREE.Vector3(0.3, 0.3, 0.3), material: materials.redplastic },
+    { type: "sphere", pos: new THREE.Vector3(1, 4, 2), scale: new THREE.Vector3(1.5, 1.5, 1.5), material: materials.glass },
     { type: "sphere", pos: new THREE.Vector3(-1, 1, -6), scale: new THREE.Vector3(1, 1, 1), material: materials.mirror },
     { type: "sphere", pos: new THREE.Vector3(3, 3, -6), scale: new THREE.Vector3(0.5, 3, 3), material: materials.turquoise },
     { type: "sphere", pos: new THREE.Vector3(-1, 4.5, -14), scale: new THREE.Vector3(4.5, 4.5, 4.5), material: materials.mirror },
 ];
 var current = 0;
-var controls = ["camera", "light 1", "light 2"];
+var controls = ["camera", "light 1", "light 2", "glass sphere"];
 var currentLight;
 function toggleControl() {
     current = (current + 1) % controls.length;
@@ -167,6 +168,8 @@ function toggleControl() {
         currentLight = lights[1];
     if (current == 2)
         currentLight = lights[2];
+    if (current == 3)
+        currentLight = object_list[2];
     return controls[current];
 }
 window.addEventListener("keydown", function (ev) {

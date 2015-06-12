@@ -109,8 +109,8 @@ var addline = function (p1, p2) {
     var dir = new THREE.Vector3().subVectors(p2, p1)
 
     var geometry = new THREE.Geometry();
-    //geometry.vertices.push(p1, p2);
-    geometry.vertices.push(p1, new THREE.Vector3().addVectors(p1, dir.multiplyScalar(4)));
+    geometry.vertices.push(p1, p2);
+    //geometry.vertices.push(p1, new THREE.Vector3().addVectors(p1, dir.multiplyScalar(8)));
 
     var line = new THREE.Line(geometry, material);
     scene.add(line);
@@ -127,14 +127,14 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
     for (var i in object_list) {
 
         var obj = object_list[i]
-        if (obj == originating_obj)
-           continue//no interreflection for now. alternatively: round small errors as zero distance
+        //if (obj == originating_obj)
+           //continue//no interreflection for now. alternatively: round small errors as zero distance
 
         var intersection = getIntersection(obj, org, dest)
 
         if (intersection && intersection != org) {
             var d = new THREE.Vector3().subVectors(intersection, org).length()
-            if (d < dist){// && d > 0.01) {//floating point errors mean we should check if d is really small and treat it as zero
+            if (d < dist && d > 0.0001) {//floating point errors mean we should check if d is really small and treat it as zero
                 dist = d
                 nearestObj = obj
                 nearestIntersection = intersection
@@ -143,6 +143,10 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
     }
 
     if (nearestObj) {
+
+        //if (nearestObj.material.transmission == 1)
+          //  if (Math.random() < 0.02)
+            //    addline(intersection, newDest)
 
         intersection = nearestIntersection
 
@@ -179,6 +183,8 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
 
                     //should scale by ligth distance here
                     var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+                    difStrength *=  1 / (distToLight)//not phyiscally correct
+                    specStrength *= 1 / (distToLight)
 
                 }
             }
@@ -207,14 +213,17 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
         var mirrorColor = new THREE.Vector3(0, 0, 0)
 
         
-        if (    obj.material.mirror.length() > 0    ) {
+        if (obj.material.mirror.length() > 0) {
+
+            //if (Math.random() < 0.02)
+              //  addline(intersection, intersection.clone().add(normal))
 
             var reflection = dir.reflect(normal).normalize()
             var reflect_dest = intersection.clone().add(reflection)
 
             //shoot another ray
             if (recursive_depth != MAIN_maxRecursion) {
-                mirrorColor = trace(intersection, reflect_dest, recursive_depth + 1, originating_obj = obj)
+                mirrorColor = trace(intersection, reflect_dest, recursive_depth + 1, obj)
                 mirrorColor.x *= obj.material.mirror.x
                 mirrorColor.y *= obj.material.mirror.y
                 mirrorColor.z *= obj.material.mirror.z
@@ -222,7 +231,41 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
 
         }
 
-        return new THREE.Vector3(0, 0, 0).addVectors(phongColor, mirrorColor)
+        //refraction
+        var transmissionColor = new THREE.Vector3(0, 0, 0)
+
+        if (obj.material.transmission > 0) {
+
+            var refr1
+            if (originating_obj) refr1 = originating_obj.material.indexOfRefraction; else refr1 = 1;
+
+            var refr2
+            if (originating_obj == obj) refr2 = 1; else refr2 = obj.material.indexOfRefraction;
+
+            var indexOfRef = refr2 / refr1
+
+            if (originating_obj == obj) 
+                normal.multiplyScalar(-1)
+
+            var cross = new THREE.Vector3().crossVectors(normal.normalize(), dir.normalize())
+            var sin0 = cross.length()
+            var sin1 = sin0 / indexOfRef
+
+            var newDir = dir.clone().applyAxisAngle(cross, Math.asin(sin0) - Math.asin(sin1) )
+            var newDest = new THREE.Vector3().addVectors(intersection, newDir)
+
+
+            if (Math.random() < 0.02)
+                addline(intersection, newDest )
+
+            //shoot another ray
+            if (recursive_depth != MAIN_maxRecursion +1) {
+                transmissionColor = trace(intersection, newDest, recursive_depth + 1, obj).multiplyScalar(obj.material.transmission)
+            }
+
+        }
+
+        return new THREE.Vector3(0, 0, 0).addVectors(phongColor, mirrorColor).add(transmissionColor)
 
     //no collision with object
     } else {
@@ -316,8 +359,8 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
 
                 //only allow rays to move forward in time
                 var candidates = []
-                if (t0 > 0) candidates.push(p0.applyMatrix4(scale).add(obj.pos))//convert back to world space
-                if (t1 > 0) candidates.push(p1.applyMatrix4(scale).add(obj.pos))
+                if (t0 > 0.01) candidates.push(p0.applyMatrix4(scale).add(obj.pos))//convert back to world space
+                if (t1 > 0.01) candidates.push(p1.applyMatrix4(scale).add(obj.pos))
             
                 if (candidates.length == 2) {
                     if (len0 < len1) return p0
@@ -335,12 +378,8 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
                 return org.clone().add(dir.multiplyScalar(t))
             } else {
                 return null
-            }
-            
-            
-
+            }  
     }
-
 }
 
 
