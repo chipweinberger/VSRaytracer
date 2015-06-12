@@ -31,6 +31,7 @@
     <Content Include="lib\webgl-utils.js" />
     <Content Include="web.config" />
     <Content Include="webgl.js" />
+    <Content Include="wood.jpg" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="main.ts" />

@@ -5,6 +5,26 @@
     <title>Charles Weinberger Raytracer</title>
 </head>
 <body onload="main()">
+
+    <img hidden id="wood" class="texture" src="wood.jpg">
+
+    <div style="position:relative">
+
+        <button onclick="antialiasing.n++; document.getElementById('aliasn').innerHTML = 'Aliasing: ' + antialiasing.n">supersampling++</button>
+        <button onclick="antialiasing.n--; document.getElementById('aliasn').innerHTML = 'Aliasing: ' + antialiasing.n">supersampling--</button>
+        <div style="position:relative" id="aliasn" >Aliasing: 1</div>
+
+        <button onclick="antialiasing.jittered = !antialiasing.jittered; this.innerHTML = 'Turn Jitter ' + !antialiasing.jittered">Turn Jitter False</button>
+
+        <button onclick="MAIN_maxRecursion++; document.getElementById('rec_depth').innerHTML = 'Depth: ' + MAIN_maxRecursion">Recusion Depth++</button>
+        <button onclick="MAIN_maxRecursion--; document.getElementById('rec_depth').innerHTML = 'Depth: ' + MAIN_maxRecursion">Recursion Depth--</button>
+        <div style="position:relative" id="rec_depth">Depth: 2</div>
+
+        <button onclick="raytrace()">Raytrace</button>
+
+    </div>
+
+
     <canvas id="webgl" width="800" height="800">
         Please use a browser that supports "canvas"
     </canvas>

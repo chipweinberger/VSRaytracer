@@ -5,7 +5,7 @@
 
 
 //default parameters shared by raytracer and webgl
-var MAIN_pos = new THREE.Vector3(0, 4, 20)
+var MAIN_pos = new THREE.Vector3(0, 1.5, 1)
 var MAIN_at = new THREE.Vector3(0, 0, -200).normalize()
 var MAIN_up = new THREE.Vector3(0, 200, 0).normalize()
 var MAIN_fov = 70
@@ -19,6 +19,9 @@ var MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix)
 
 var MAIN_maxRecursion = 2
 
+//where the textures will be loaded
+var MAIN_textures= {}
+
 
 var materials = {
     redplastic: {
@@ -27,7 +30,8 @@ var materials = {
         diff: new THREE.Vector3(0.6, 0.0, 0.0),
         spec: new THREE.Vector3(0.6, 0.6, 0.6),
         shiny: 100,
-        mirror: new THREE.Vector3(0.3, 0.3, 0.3)//how strongly deos it reflect each color
+        mirror: new THREE.Vector3(0.3, 0.3, 0.3),//how strongly deos it reflect each color
+        texture: null,
     },
     brass: {
         emit: new THREE.Vector3(0, 0, 0),
@@ -35,7 +39,8 @@ var materials = {
         diff: new THREE.Vector3(0.780392, 0.568627, 0.113725),
         spec: new THREE.Vector3(0.992157, 0.941176, 0.807843),
         shiny: 27.8974,
-        mirror: new THREE.Vector3(0.6, 0.6, 0.6)//how strongly deos it reflect each color
+        mirror: new THREE.Vector3(0.6, 0.6, 0.6),//how strongly deos it reflect each color
+        texture: null,
     },
     mirror: {
         emit: new THREE.Vector3(0, 0, 0),
@@ -44,22 +49,72 @@ var materials = {
         spec: new THREE.Vector3(0, 0, 0),
         mirror: new THREE.Vector3(1, 1, 1),//how strongly deos it reflect each color
         shiny: 0,
+        texture: null,
     },
+    turquoise: {
+        emit: new THREE.Vector3(0.0, 0.0, 0.0),
+        amb: new THREE.Vector3(0.1, 0.18725, 0.1745),
+        diff: new THREE.Vector3(0.396, 0.74151, 0.69102),
+        spec: new THREE.Vector3(0.297254, 0.30829, 0.306678), 
+        mirror: new THREE.Vector3(.2, .2, .2),  
+        shiny: 12.8,
+        texture: null,
+    },
+    wood: {
+        emit: new THREE.Vector3(0, 0, 0),
+        amb: new THREE.Vector3(0, 0, 0),
+        diff: new THREE.Vector3(1.4, 1.4, 1.4),//textures are kinda dim
+        spec: new THREE.Vector3(.7, .7, .7),
+        mirror: new THREE.Vector3(.4, .4, .4),//how strongly deos it reflect each color
+        shiny: 30,
+        texture: "wood",
+    }
+
+}
+
+function addAreaLight(pos, dir, length, color, strength, samples, jittered) {
+
+    var positions = []
+
+    for (var x = 0; x < samples; x++) {
+        for (var y = 0; y < samples; y++) {
+            if (jittered) {
+                x = THREE.Math.randFloat(x, x + 1)
+                y = THREE.Math.randFloat(y, y + 1)
+            }
+            positions.push(new THREE.Vector3(x/length,y/length,0))//unscaled length of one
+        }
+    }
+
+    for (var i in positions) {
+        var vert = positions[i]
+        var scale = new THREE.Matrix4().makeScale(length, length, length)
+        var translate = new THREE.Matrix4().makeTranslation(pos.x, pos.y, pos.z)
+        positions[i] = vert.applyMatrix4(scale).applyMatrix4 (translate)
+    }
+
+    for (var i in positions) {
+        var pos = positions[i]
+        var intensity = strength / samples
+
+        lights.push({ pos: pos, color: color, strength: intensity } )
+    }
 
 }
 
 var lights = [
     {
-        pos: new THREE.Vector3(0, 2, 0),
+        pos: new THREE.Vector3(2, 2, 0),
         color: new THREE.Vector3(1, 1, 1),
         strength: .8
     }
 ]
 
 var object_list = [
-    { type: "sphere", pos: new THREE.Vector3(1, 1, -8), size: 1, material: materials.redplastic },
-    { type: "sphere", pos: new THREE.Vector3(3, 1, -8), size: 1, material: materials.mirror},
-    { type: "plane", pos: new THREE.Vector3(0, 0, 0), at: new THREE.Vector3(0, 1, 0), material: materials.brass}
+    { type: "sphere", pos: new THREE.Vector3(-1.5, 1, -8), size: 1, material: materials.redplastic },
+    { type: "sphere", pos: new THREE.Vector3(1.5, 1, -8), size: 1, material: materials.mirror },
+    { type: "sphere", pos: new THREE.Vector3(0, 3, -5), size: 1, material: materials.turquoise },
+    { type: "plane", pos: new THREE.Vector3(0, 0, 0), at: new THREE.Vector3(0, 1, 0), material: materials.wood}
 ]
 
 window.addEventListener("keydown", function (ev) {
@@ -120,8 +175,33 @@ function draw() {
 
 }
 
+function loadTextures() {
+
+    var images = <any> document.getElementsByClassName("texture")
+    for (var i in images) {
+
+        try {
+
+        var img = images[i]
+        var canvas = <any> document.createElement("CANVAS");
+        canvas.height = img.height
+        canvas.width = img.width
+        var context = canvas.getContext('2d');
+
+        context.drawImage(img, 0, 0);
+ 
+        MAIN_textures[img.id] = context.getImageData(0, 0, img.width, img.height)
+        } finally {
+            continue    
+        }
+
+    }
+}
+
 
 function main() {
+
+    loadTextures()
 
     initWebgl();
     initRaytrace();

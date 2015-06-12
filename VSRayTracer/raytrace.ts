@@ -16,7 +16,7 @@ function initRaytrace() {
 
 var antialiasing = {
 
-    jittered: false,
+    jittered: true,
     n: 1,
 
 }
@@ -49,11 +49,11 @@ function raytraceBlocking(x, width, height,  upper_left) {
         var avg_pix = new THREE.Vector3(0, 0, 0)
 
         //antialiasing
-        for (var subx = x; subx < x + 1; subx += 1 / antialiasing.n) {
-            for (var suby = y; suby < y + 1; suby += 1 / antialiasing.n) {
+        for (var xSample = 0; xSample < antialiasing.n; xSample++) {
+            for (var ySample = 0; ySample < antialiasing.n; ySample++) {
 
-                var x2 = subx //clone
-                var y2 = suby //clone
+                var x2 = x + xSample / antialiasing.n //clone
+                var y2 = y + ySample / antialiasing.n  //clone
 
                 if (x2 == 400 && y2 == 400)
                     debugger
@@ -91,7 +91,7 @@ function raytraceBlocking(x, width, height,  upper_left) {
 
         //set pixel color
         var ctx = <any> canvs.getContext("2d");
-        var p = avg_pix.multiplyScalar(255).floor()
+        var p = avg_pix.clone().multiplyScalar(255).floor()
         ctx.fillStyle = "rgba(" + p.x + "," + p.y + "," + p.z + "," + 255 + ")";
         ctx.fillRect(x, y, 1, 1);
     }
@@ -178,10 +178,23 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
             }
         }
 
+
+        //texture mapping
+        if (obj.material.texture)
+            var textureColor = getTextureColor(obj,intersection)
+
+        //get add up colors
         var phongColor = new THREE.Vector3(0, 0, 0)
         phongColor.add(amb)
-        phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength))
         phongColor.add(obj.material.spec.clone().multiplyScalar(specStrength))
+
+        //if texture, use texture color as diffuse color
+        if (obj.material.texture) {
+            var Ds = obj.material.diff.length()
+            phongColor.add(textureColor.clone().multiplyScalar(difStrength).multiplyScalar(Ds))
+        } else {
+            phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength))
+        }
 
 
         //if mirror
@@ -209,6 +222,33 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
     } 
 }
 
+//each object has its own type of texture mapping so we need a function to handle that
+function getTextureColor(obj, point: THREE.Vector3 ): THREE.Vector3 {
+
+    if (obj.material.texture) {
+
+        var imgData  = MAIN_textures[obj.material.texture]
+
+        switch (obj.type) {
+
+            case "plane":
+                var width = imgData.width
+                var height = imgData.height
+                var pixX = Math.abs(Math.floor((point.x * width / 6) % width))
+                var pixY = Math.abs(Math.floor((point.y * height / 6) % height))
+
+                var i = (width * pixY + pixX) * 4
+                var d = imgData.data
+                return new THREE.Vector3(d[i] / 255.0, d[i + 1] / 255.0, d[i + 2]/255.0);
+                break
+        }
+        return new THREE.Vector3(0, 0, 0)
+
+    } else {
+        return new THREE.Vector3(0, 0, 0)
+    }
+}
+
 
 function isShadowed(point, lightpos) {
     var dirToLight = new THREE.Vector3().subVectors(lightpos, point).normalize();
@@ -216,11 +256,17 @@ function isShadowed(point, lightpos) {
 
     for (var i in object_list) {
         var obj = object_list[i]
+
+        if (obj.material == materials.turquoise)
+            debugger
+
         var intersect = getIntersection(obj, point, dest)
 
+        var lenToLight = new THREE.Vector3().subVectors(lightpos,point).length()
+
         if (intersect) {
-            var dist = new THREE.Vector3().subVectors(point, intersect).length()
-            if (dist > 0.001)//disregard floating point errors
+            var intersectDist = new THREE.Vector3().subVectors(point, intersect).length()
+            if (intersectDist < lenToLight && intersectDist > 0.001)//disregard floating point errors
                 return true;
         }
     }
