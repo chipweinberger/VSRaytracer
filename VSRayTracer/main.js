@@ -166,7 +166,7 @@ var rotZ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), M
 var noRot = new THREE.Quaternion(0, 0, 0, 0);
 var object_list = [
     { type: "plane", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
-    { type: "sphere", rot: rotZ, pos: new THREE.Vector3(-4, .3, -6), scale: new THREE.Vector3(0.3, 3, 0.3), material: materials.redplastic },
+    { type: "sphere", rot: noRot, pos: new THREE.Vector3(-4, .3, -6), scale: new THREE.Vector3(0.3, 3, 0.3), material: materials.redplastic },
     { type: "sphere", rot: noRot, pos: new THREE.Vector3(1, 4, 2), scale: new THREE.Vector3(1.5, 1.5, 1.5), material: materials.glass },
     { type: "sphere", rot: noRot, pos: new THREE.Vector3(-1, 1, -6), scale: new THREE.Vector3(1, 1, 1), material: materials.mirror },
     { type: "sphere", rot: noRot, pos: new THREE.Vector3(3, 3, -6), scale: new THREE.Vector3(0.5, 3, 3), material: materials.turquoise },
@@ -287,7 +287,8 @@ var prevLights = [
 var rotX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
 var prevObjs = [
     { type: "plane", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
-    { type: "cone", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(.1, .1, .1), material: materials.redplastic },
+    //{ type: "cone",     rot:  noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(.1, .1, .1), material: materials.redplastic },
+    { type: "cylinder", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(2, 2, 2), material: materials.redplastic },
 ];
 function switchScene() {
     var temp1 = prevLights;
