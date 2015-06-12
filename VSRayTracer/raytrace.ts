@@ -4,7 +4,10 @@
 
 
 
-var canvs =  <HTMLCanvasElement><any> document.getElementById("raytrace")
+var canvs = <HTMLCanvasElement><any> document.getElementById("raytrace")
+var rayTrace_fov = MAIN_fov * 1.2
+
+
 
 
 
@@ -31,8 +34,8 @@ function raytrace() {
     var height = parseInt( canvas.getAttribute("height") ) 
 
     //dir to upper left
-    var RotXbig = new THREE.Matrix4().makeRotationY( -THREE.Math.degToRad(MAIN_fov/2) )
-    var RotYbig = new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(MAIN_fov / 2))
+    var RotXbig = new THREE.Matrix4().makeRotationY(-THREE.Math.degToRad(rayTrace_fov/2) )
+    var RotYbig = new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(rayTrace_fov/ 2))
     var RotXYbig = new THREE.Matrix4().multiplyMatrices(RotXbig, RotYbig)
     var upper_left = new THREE.Vector3(0,0,-1).applyMatrix4(RotXYbig)
 
@@ -67,8 +70,8 @@ function raytraceBlocking(x, width, height,  upper_left) {
                     y2 = THREE.Math.randFloat(y2, y2 + step)
                 }
 
-                var degX = x2 / width * MAIN_fov
-                var degY = y2 / width * MAIN_fov
+                var degX = x2 / width * rayTrace_fov
+                var degY = y2 / width * rayTrace_fov
                 var RotX = new THREE.Matrix4().makeRotationY(THREE.Math.degToRad(degX))
                 var RotY = new THREE.Matrix4().makeRotationX(-THREE.Math.degToRad(degY))
                 var RotXY = new THREE.Matrix4().multiplyMatrices(RotY, RotX)//opposite order
@@ -92,7 +95,7 @@ function raytraceBlocking(x, width, height,  upper_left) {
         var ctx = <any> canvs.getContext("2d");
         var p = avg_pix.clone().multiplyScalar(255).round()
         ctx.fillStyle = "rgba(" + p.x + "," + p.y + "," + p.z + "," + 255 + ")";
-        ctx.fillRect(x, y, 1, 1);
+        ctx.fillRect(800-x, y, 1, 1);
     }
 
 }
@@ -154,26 +157,30 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
         for (var j in lights) {
 
             var light = lights[j]
-            var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize()
 
-            //check if in shadow
-            if (isShadowed(intersection, light.pos)) {
-                continue
-            } else {
+            if (light.on) {
 
-                //diffuse
-                difStrength += normal.clone().dot(dirToLight) * light.strength
+                var dirToLight = new THREE.Vector3().subVectors(light.pos, intersection).normalize()
 
-                //specular
-                var reflection = dirToLight.clone().reflect(normal).normalize()
-                var theta = Math.max(reflection.clone().dot(dir), 0)
-                var shny = obj.material.shiny
-                theta = Math.pow(theta, shny)
-                specStrength += theta * light.strength
+                //check if in shadow
+                if (isShadowed(intersection, light.pos)) {
+                    continue
+                } else {
 
-                //should scale by ligth distance here
-                var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+                    //diffuse
+                    difStrength += normal.clone().dot(dirToLight) * light.strength
 
+                    //specular
+                    var reflection = dirToLight.clone().reflect(normal).normalize()
+                    var theta = Math.max(reflection.clone().dot(dir), 0)
+                    var shny = obj.material.shiny
+                    theta = Math.pow(theta, shny)
+                    specStrength += theta * light.strength
+
+                    //should scale by ligth distance here
+                    var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
+
+                }
             }
         }
 
@@ -235,8 +242,8 @@ function getTextureColor(obj, point: THREE.Vector3 ): THREE.Vector3 {
             case "plane":
                 var width = imgData.width
                 var height = imgData.height
-                var pixX = Math.abs(Math.floor((point.x * width / 6) % width))
-                var pixY = Math.abs(Math.floor((point.y * height / 6) % height))
+                var pixY = Math.abs(Math.floor((point.x * 100) % width))
+                var pixX = Math.abs(Math.floor((point.z * 100) % height))
 
                 var i = (width * pixY + pixX) * 4
                 var d = imgData.data
@@ -272,12 +279,15 @@ function isShadowed(point, lightpos) {
 
 }
 
+
+//takes and output in world space 
 function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
 
-    //var invScale = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z))
+    var invScale = new THREE.Matrix4().makeScale(1/obj.scale.x, 1/obj.scale.y, 1/obj.scale.z)
+    var scale = new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z)
 
-    var org = org.clone().sub(obj.pos)//.applyMatrix4(invScale)
-    var dest = dest.clone().sub(obj.pos)//.applyMatrix4(invScale)
+    var org = org.clone().sub(obj.pos).applyMatrix4(invScale)
+    var dest = dest.clone().sub(obj.pos).applyMatrix4(invScale)
     var dir = new THREE.Vector3().subVectors(dest, org).normalize()
 
     switch (obj.type) {
@@ -297,6 +307,7 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
                 var t0 = (-b)/a  + Math.sqrt(b * b - a * c) / (a)
                 var t1 = (-b)/a  - Math.sqrt(b * b - a * c) / (a)
             
+                //model space points
                 var p0 = org.clone().add(dir.clone().multiplyScalar(t0))
                 var p1 = org.clone().add(dir.clone().multiplyScalar(t1))
             
@@ -305,8 +316,8 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
 
                 //only allow rays to move forward in time
                 var candidates = []
-                if (t0 > 0) candidates.push(p0.add(obj.pos))
-                if (t1 > 0) candidates.push(p1.add(obj.pos))
+                if (t0 > 0) candidates.push(p0.applyMatrix4(scale).add(obj.pos))//convert back to world space
+                if (t1 > 0) candidates.push(p1.applyMatrix4(scale).add(obj.pos))
             
                 if (candidates.length == 2) {
                     if (len0 < len1) return p0
@@ -339,7 +350,8 @@ function getNormal(obj, dest, intersection) : THREE.Vector3{
 
     switch (obj.type) {
         case "sphere":
-            return new THREE.Vector3().subVectors(intersection , obj.pos).normalize()
+            var invTrans = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z)).transpose()
+            return new THREE.Vector3().subVectors(intersection, obj.pos).applyMatrix4(invTrans).normalize()
             break;
         case "plane":
             return new THREE.Vector3(0,1,0)

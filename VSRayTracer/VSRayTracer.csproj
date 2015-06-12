@@ -29,6 +29,8 @@
     <Content Include="lib\glmatrix.js" />
     <Content Include="lib\webgl-debug.js" />
     <Content Include="lib\webgl-utils.js" />
+    <Content Include="tiger.jpg" />
+    <Content Include="tiger.png" />
     <Content Include="web.config" />
     <Content Include="webgl.js" />
     <Content Include="wood.jpg" />

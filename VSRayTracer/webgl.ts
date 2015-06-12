@@ -12,6 +12,8 @@ var cameraPerspective;
 var renderer;
 
 
+var lightSphere = []
+
 function initWebgl() {
 
 
@@ -41,8 +43,8 @@ function initWebgl() {
         switch (obj.type) {
             case "sphere":
                 var sp = new THREE.Mesh(new THREE.SphereGeometry(1, 100, 100), new THREE.MeshNormalMaterial());
-                sp.position.set(obj.pos.x, obj.pos.y, obj.pos.z) 
-                sp.scale.set = obj.scale
+                sp.position.set(obj.pos.x, obj.pos.y, obj.pos.z)
+                sp.scale.set(obj.scale.x, obj.scale.y, obj.scale.z)
                 scene.add(sp);
                 break;
             case "plane":
@@ -55,9 +57,24 @@ function initWebgl() {
         }
     }
 
+    for (i in lights) {
+        var light = lights[i];
+        var sp = new THREE.Mesh(new THREE.SphereGeometry(.3, 100, 100), new THREE.MeshBasicMaterial({ color: 0xffffff}));
+        sp.position.set(light.pos.x, light.pos.y, light.pos.z)
+        scene.add(sp);
+        sp["assoc_light"] = light
+        lightSphere.push(sp)
+    }
+
 }
 
 function renderWebgl() {
+
+    for (var i in lightSphere) {
+        var sph = lightSphere[i]
+        var light = sph.assoc_light
+        sph.position.set(light.pos.x, light.pos.y, light.pos.z)
+    }
 
 
     camera.projectionMatrix = MAIN_viewMatrix
