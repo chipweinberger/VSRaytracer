@@ -45,6 +45,7 @@ function initWebgl() {
                 var sp = new THREE.Mesh(new THREE.SphereGeometry(1, 100, 100), new THREE.MeshNormalMaterial());
                 sp.position.set(obj.pos.x, obj.pos.y, obj.pos.z)
                 sp.scale.set(obj.scale.x, obj.scale.y, obj.scale.z)
+                sp.rotation.set(obj.rot.x * Math.PI/2, obj.rot.y * Math.PI/2, obj.rot.z * Math.PI/2)
                 sp["assoc_light"] = obj
                 lightSphere.push(sp)
                 scene.add(sp);
@@ -53,6 +54,12 @@ function initWebgl() {
                 var plane = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshBasicMaterial({ color: 0xA0888888, side: THREE.DoubleSide }));
                 plane.position.set(obj.pos.x, obj.pos.y, obj.pos.z) 
                 plane.lookAt(new THREE.Vector3(0,1,0))
+                scene.add(plane);
+                break;
+            case "cylinder":
+                var plane = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1000), new THREE.MeshNormalMaterial());
+                plane.position.set(obj.pos.x, obj.pos.y, obj.pos.z)
+                plane.rotation.set(Math.PI / 2 + obj.rot.x * Math.PI / 2, obj.rot.y * Math.PI / 2, obj.rot.z * Math.PI / 2)
                 scene.add(plane);
                 break;
         

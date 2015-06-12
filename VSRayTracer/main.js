@@ -94,6 +94,17 @@ var materials = {
         texture: null,
         transmission: .8,
         indexOfRefraction: 1.4,
+    },
+    checkered: {
+        emit: new THREE.Vector3(0, 0, 0),
+        amb: new THREE.Vector3(0, 0, 0),
+        diff: new THREE.Vector3(0.0, 0.0, 0.0),
+        spec: new THREE.Vector3(0, 0, 0),
+        mirror: new THREE.Vector3(0, 0, 0),
+        shiny: 0,
+        texture: "checkered",
+        transmission: 0,
+        indexOfRefraction: 0,
     }
 };
 function addAreaLight(pos, dir, length, color, strength, samples, jittered) {
@@ -151,13 +162,15 @@ var lights = [
         on: false,
     }
 ];
+var rotZ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
+var noRot = new THREE.Quaternion(0, 0, 0, 0);
 var object_list = [
-    { type: "plane", pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
-    { type: "sphere", pos: new THREE.Vector3(-4, .3, -6), scale: new THREE.Vector3(0.3, 0.3, 0.3), material: materials.redplastic },
-    { type: "sphere", pos: new THREE.Vector3(1, 4, 2), scale: new THREE.Vector3(1.5, 1.5, 1.5), material: materials.glass },
-    { type: "sphere", pos: new THREE.Vector3(-1, 1, -6), scale: new THREE.Vector3(1, 1, 1), material: materials.mirror },
-    { type: "sphere", pos: new THREE.Vector3(3, 3, -6), scale: new THREE.Vector3(0.5, 3, 3), material: materials.turquoise },
-    { type: "sphere", pos: new THREE.Vector3(-1, 4.5, -14), scale: new THREE.Vector3(4.5, 4.5, 4.5), material: materials.mirror },
+    { type: "plane", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
+    { type: "sphere", rot: rotZ, pos: new THREE.Vector3(-4, .3, -6), scale: new THREE.Vector3(0.3, 3, 0.3), material: materials.redplastic },
+    { type: "sphere", rot: noRot, pos: new THREE.Vector3(1, 4, 2), scale: new THREE.Vector3(1.5, 1.5, 1.5), material: materials.glass },
+    { type: "sphere", rot: noRot, pos: new THREE.Vector3(-1, 1, -6), scale: new THREE.Vector3(1, 1, 1), material: materials.mirror },
+    { type: "sphere", rot: noRot, pos: new THREE.Vector3(3, 3, -6), scale: new THREE.Vector3(0.5, 3, 3), material: materials.turquoise },
+    { type: "sphere", rot: noRot, pos: new THREE.Vector3(-1, 4.5, -14), scale: new THREE.Vector3(4.5, 4.5, 4.5), material: materials.mirror },
 ];
 var current = 0;
 var controls = ["camera", "light 1", "light 2", "glass sphere"];
@@ -271,18 +284,19 @@ var prevLights = [
         on: true,
     }
 ];
+var rotX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
 var prevObjs = [
-    { type: "sphere", pos: new THREE.Vector3(-1.5, 1, -8), scale: new THREE.Vector3(1, 1, 1), material: materials.redplastic },
-    { type: "sphere", pos: new THREE.Vector3(2, 1, -8), scale: new THREE.Vector3(1.5, 1.5, 1.5), material: materials.mirror },
-    { type: "sphere", pos: new THREE.Vector3(0, 3, -5), scale: new THREE.Vector3(0.1, 0.8, 0.8), material: materials.turquoise },
-    { type: "sphere", pos: new THREE.Vector3(3, 2, -2), scale: new THREE.Vector3(2.5, 2.5, 2.5), material: materials.mirror },
-    { type: "plane", pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(0, 1, 0), material: materials.wood }
+    { type: "plane", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
+    { type: "cone", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(.1, .1, .1), material: materials.redplastic },
 ];
 function switchScene() {
+    var temp1 = prevLights;
+    var temp2 = prevObjs;
     prevLights = lights;
     prevObjs = object_list;
-    lights = prevLights;
-    object_list = prevObjs;
+    lights = temp1;
+    object_list = temp2;
+    initWebgl();
 }
 function draw() {
     renderWebgl();

@@ -179,8 +179,8 @@ function trace(org, dest, recursive_depth, originating_obj) {
             var sin1 = sin0 / indexOfRef;
             var newDir = dir.clone().applyAxisAngle(cross, Math.asin(sin0) - Math.asin(sin1));
             var newDest = new THREE.Vector3().addVectors(intersection, newDir);
-            if (Math.random() < 0.02)
-                addline(intersection, newDest);
+            //if (Math.random() < 0.02)
+            //  addline(intersection, newDest )
             //shoot another ray
             if (recursive_depth != MAIN_maxRecursion + 1) {
                 transmissionColor = trace(intersection, newDest, recursive_depth + 1, obj).multiplyScalar(obj.material.transmission);
@@ -232,8 +232,10 @@ function isShadowed(point, lightpos) {
 function getIntersection(obj, org, dest) {
     var invScale = new THREE.Matrix4().makeScale(1 / obj.scale.x, 1 / obj.scale.y, 1 / obj.scale.z);
     var scale = new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z);
-    var org = org.clone().sub(obj.pos).applyMatrix4(invScale);
-    var dest = dest.clone().sub(obj.pos).applyMatrix4(invScale);
+    var rot = new THREE.Matrix4().makeRotationFromQuaternion(obj.rot);
+    var rotT = rot.clone().transpose();
+    var org = org.clone().sub(obj.pos).applyMatrix4(rotT).applyMatrix4(invScale);
+    var dest = dest.clone().sub(obj.pos).applyMatrix4(rotT).applyMatrix4(invScale);
     var dir = new THREE.Vector3().subVectors(dest, org).normalize();
     switch (obj.type) {
         case "sphere":
@@ -241,35 +243,16 @@ function getIntersection(obj, org, dest) {
             var a = dir.length() * dir.length();
             var b = org.dot(dir);
             var c = (org.length() * org.length()) - 1;
-            var disc = (b * b) - (a * c);
-            if (disc > 0) {
-                //return new THREE.Vector3(1,1,1)
-                var t0 = (-b) / a + Math.sqrt(b * b - a * c) / (a);
-                var t1 = (-b) / a - Math.sqrt(b * b - a * c) / (a);
-                //model space points
-                var p0 = org.clone().add(dir.clone().multiplyScalar(t0));
-                var p1 = org.clone().add(dir.clone().multiplyScalar(t1));
-                var len0 = new THREE.Vector3().subVectors(p0, org).length();
-                var len1 = new THREE.Vector3().subVectors(p1, org).length();
-                //only allow rays to move forward in time
-                var candidates = [];
-                if (t0 > 0.01)
-                    candidates.push(p0.applyMatrix4(scale).add(obj.pos)); //convert back to world space
-                if (t1 > 0.01)
-                    candidates.push(p1.applyMatrix4(scale).add(obj.pos));
-                if (candidates.length == 2) {
-                    if (len0 < len1)
-                        return p0;
-                    else
-                        return p1;
-                }
-                else {
-                    return candidates[0];
-                }
-            }
-            else {
-                return null;
-            }
+            break;
+        case "cylinder":
+            var a = (dir.x * dir.x) + (dir.y * dir.y);
+            var b = 2 * (org.x * dir.x + org.y * dir.y);
+            var c = (org.x * org.x) + (org.y * org.y) - 1;
+            break;
+        case "cone":
+            var a = (dir.x * dir.x) + (dir.y * dir.y) - (dir.z * dir.z);
+            var b = 2 * (org.x * dir.x + org.y * dir.y - org.z * dir.z);
+            var c = (org.x * org.x) + (org.y * org.y) - (org.z * org.z);
             break;
         case "plane":
             if (dir.y < 0) {
@@ -279,18 +262,54 @@ function getIntersection(obj, org, dest) {
             else {
                 return null;
             }
+            break;
+    }
+    var disc = (b * b) - (a * c);
+    if (disc > 0) {
+        var t0 = (-b) / a + Math.sqrt(b * b - a * c) / (a);
+        var t1 = (-b) / a - Math.sqrt(b * b - a * c) / (a);
+        //model space points
+        var p0 = org.clone().add(dir.clone().multiplyScalar(t0));
+        var p1 = org.clone().add(dir.clone().multiplyScalar(t1));
+        var len0 = new THREE.Vector3().subVectors(p0, org).length();
+        var len1 = new THREE.Vector3().subVectors(p1, org).length();
+        //only allow rays to move forward in time
+        var candidates = [];
+        if (t0 > 0.01)
+            candidates.push(p0.applyMatrix4(scale).applyMatrix4(rot).add(obj.pos)); //convert back to world space
+        if (t1 > 0.01)
+            candidates.push(p1.applyMatrix4(scale).applyMatrix4(rot).add(obj.pos));
+        if (candidates.length == 2) {
+            if (len0 < len1)
+                return p0;
+            else
+                return p1;
+        }
+        else {
+            return candidates[0];
+        }
+    }
+    else {
+        return null;
     }
 }
 function getNormal(obj, dest, intersection) {
+    var rot = new THREE.Matrix4().makeRotationFromQuaternion(obj.rot);
+    var rotT = rot.clone().transpose();
     switch (obj.type) {
         case "sphere":
             var invTrans = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z)).transpose();
-            return new THREE.Vector3().subVectors(intersection, obj.pos).applyMatrix4(invTrans).normalize();
+            return new THREE.Vector3().subVectors(intersection, obj.pos).applyMatrix4(rotT).applyMatrix4(invTrans).normalize();
+            break;
+        case "cylinder":
+            var invTrans = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z)).transpose();
+            var t = new THREE.Vector3(obj.x, obj.y, 0);
+            return new THREE.Vector3().subVectors(intersection, t).applyMatrix4(rotT).applyMatrix4(invTrans).normalize();
             break;
         case "plane":
             return new THREE.Vector3(0, 1, 0);
             break;
     }
-    return new THREE.Vector3();
+    return new THREE.Vector3(1, 1, 1);
 }
 //# sourceMappingURL=raytrace.js.map
