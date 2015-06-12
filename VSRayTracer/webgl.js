@@ -23,14 +23,15 @@ function initWebgl() {
         var obj = object_list[i];
         switch (obj.type) {
             case "sphere":
-                var sp = new THREE.Mesh(new THREE.SphereGeometry(obj.size, 100, 100), new THREE.MeshNormalMaterial());
+                var sp = new THREE.Mesh(new THREE.SphereGeometry(1, 100, 100), new THREE.MeshNormalMaterial());
                 sp.position.set(obj.pos.x, obj.pos.y, obj.pos.z);
+                sp.scale.set = obj.scale;
                 scene.add(sp);
                 break;
             case "plane":
                 var plane = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshBasicMaterial({ color: 0xA0888888, side: THREE.DoubleSide }));
                 plane.position.set(obj.pos.x, obj.pos.y, obj.pos.z);
-                plane.lookAt(obj.at);
+                plane.lookAt(new THREE.Vector3(0, 1, 0));
                 scene.add(plane);
                 break;
         }

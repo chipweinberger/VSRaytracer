@@ -20,7 +20,11 @@
         <button onclick="MAIN_maxRecursion--; document.getElementById('rec_depth').innerHTML = 'Depth: ' + MAIN_maxRecursion">Recursion Depth--</button>
         <div style="position:relative" id="rec_depth">Depth: 2</div>
 
-        <button onclick="raytrace()">Raytrace</button>
+        <button onclick="addAreaLight(new THREE.Vector3(1, 5, -5), null, .5, new THREE.Vector3(1, 1, 1), 1, 4, true) ">Add area light</button>
+
+        <button onclick="switchScene()">SwitchScene</button>
+
+        <button onclick="for (var i = 0; i < pendingRayTraces.length; i++) { clearTimeout(pendingRayTraces[i]); } pendingRayTraces = []; raytrace();">Raytrace</button>
 
     </div>
 

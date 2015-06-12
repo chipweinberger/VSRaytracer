@@ -7,6 +7,7 @@ var antialiasing = {
     jittered: true,
     n: 1,
 };
+var pendingRayTraces = [];
 function raytrace() {
     var width = parseInt(canvas.getAttribute("width"));
     var height = parseInt(canvas.getAttribute("height"));
@@ -17,7 +18,7 @@ function raytrace() {
     var upper_left = new THREE.Vector3(0, 0, -1).applyMatrix4(RotXYbig);
     //shoot rays
     for (var x = 0; x < width; x++) {
-        window.setTimeout(raytraceBlocking, 0, x, width, height, upper_left);
+        pendingRayTraces.push(window.setTimeout(raytraceBlocking, 0, x, width, height, upper_left));
     }
 }
 function raytraceBlocking(x, width, height, upper_left) {
@@ -28,8 +29,6 @@ function raytraceBlocking(x, width, height, upper_left) {
             for (var ySample = 0; ySample < antialiasing.n; ySample++) {
                 var x2 = x + xSample / antialiasing.n; //clone
                 var y2 = y + ySample / antialiasing.n; //clone
-                if (x2 == 400 && y2 == 400)
-                    debugger;
                 //org
                 var org = new THREE.Vector3(0, 0, 0);
                 //jitter
@@ -45,9 +44,9 @@ function raytraceBlocking(x, width, height, upper_left) {
                 var RotXY = new THREE.Matrix4().multiplyMatrices(RotY, RotX); //opposite order
                 var dest = upper_left.clone().applyMatrix4(RotXY);
                 //apply view matrix
-                org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rotMatrix));
+                org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rayTraceRot));
                 org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_transMatrix));
-                dest.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rotMatrix));
+                dest.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rayTraceRot));
                 dest.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_transMatrix));
                 var color = trace(org, dest, 0);
                 color.divideScalar(antialiasing.n * antialiasing.n);
@@ -56,7 +55,7 @@ function raytraceBlocking(x, width, height, upper_left) {
         }
         //set pixel color
         var ctx = canvs.getContext("2d");
-        var p = avg_pix.clone().multiplyScalar(255).floor();
+        var p = avg_pix.clone().multiplyScalar(255).round();
         ctx.fillStyle = "rgba(" + p.x + "," + p.y + "," + p.z + "," + 255 + ")";
         ctx.fillRect(x, y, 1, 1);
     }
@@ -97,7 +96,7 @@ function trace(org, dest, recursive_depth, originating_obj) {
         intersection = nearestIntersection;
         //phong shading
         obj = nearestObj;
-        var amb = obj.material.amb;
+        var amb = obj.material.amb.clone();
         var normal = getNormal(obj, dest, intersection);
         var difStrength = 0.0;
         var specStrength = 0.0;
@@ -110,13 +109,13 @@ function trace(org, dest, recursive_depth, originating_obj) {
             }
             else {
                 //diffuse
-                difStrength = normal.clone().dot(dirToLight) * light.strength;
+                difStrength += normal.clone().dot(dirToLight) * light.strength;
                 //specular
                 var reflection = dirToLight.clone().reflect(normal).normalize();
-                var theta = Math.max(reflection.dot(dir), 0);
+                var theta = Math.max(reflection.clone().dot(dir), 0);
                 var shny = obj.material.shiny;
                 theta = Math.pow(theta, shny);
-                specStrength = theta * light.strength;
+                specStrength += theta * light.strength;
                 //should scale by ligth distance here
                 var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
             }
@@ -181,8 +180,6 @@ function isShadowed(point, lightpos) {
     var dest = new THREE.Vector3().addVectors(point, dirToLight);
     for (var i in object_list) {
         var obj = object_list[i];
-        if (obj.material == materials.turquoise)
-            debugger;
         var intersect = getIntersection(obj, point, dest);
         var lenToLight = new THREE.Vector3().subVectors(lightpos, point).length();
         if (intersect) {
@@ -194,8 +191,9 @@ function isShadowed(point, lightpos) {
     return false;
 }
 function getIntersection(obj, org, dest) {
-    var org = org.clone().sub(obj.pos);
-    var dest = dest.clone().sub(obj.pos);
+    //var invScale = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z))
+    var org = org.clone().sub(obj.pos); //.applyMatrix4(invScale)
+    var dest = dest.clone().sub(obj.pos); //.applyMatrix4(invScale)
     var dir = new THREE.Vector3().subVectors(dest, org).normalize();
     switch (obj.type) {
         case "sphere":
