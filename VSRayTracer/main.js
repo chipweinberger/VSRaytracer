@@ -64,8 +64,8 @@ var materials = {
     },
     wood: {
         emit: new THREE.Vector3(0, 0, 0),
-        amb: new THREE.Vector3(0, 0, 0),
-        diff: new THREE.Vector3(1.4, 1.4, 1.4),
+        amb: new THREE.Vector3(.1, .1, .1),
+        diff: new THREE.Vector3(1, 1, 1),
         spec: new THREE.Vector3(.7, .7, .7),
         mirror: new THREE.Vector3(.4, .4, .4),
         shiny: 30,
@@ -110,12 +110,12 @@ var materials = {
 function addAreaLight(pos, dir, length, color, strength, samples, jittered) {
     var positions = [];
     for (var x = 0; x < samples; x++) {
-        for (var y = 0; y < samples; y++) {
+        for (var z = 0; z < samples; z++) {
             if (jittered) {
                 var px = x + Math.random();
-                var py = y + Math.random();
+                var pz = z + Math.random();
             }
-            positions.push(new THREE.Vector3(px / samples * length, py / samples * length, 0)); //unscaled length of one
+            positions.push(new THREE.Vector3(px / samples * length, 0, pz / samples * length)); //unscaled length of one
         }
     }
     for (var i in positions) {
@@ -167,6 +167,7 @@ var noRot = new THREE.Quaternion(0, 0, 0, 0);
 var object_list = [
     { type: "plane", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
     { type: "sphere", rot: noRot, pos: new THREE.Vector3(-4, .3, -6), scale: new THREE.Vector3(0.3, 3, 0.3), material: materials.redplastic },
+    { type: "sphere", rot: noRot, pos: new THREE.Vector3(-2, 3, -3), scale: new THREE.Vector3(1, 1, 1), material: materials.redplastic },
     { type: "sphere", rot: noRot, pos: new THREE.Vector3(1, 4, 2), scale: new THREE.Vector3(1.5, 1.5, 1.5), material: materials.glass },
     { type: "sphere", rot: noRot, pos: new THREE.Vector3(-1, 1, -6), scale: new THREE.Vector3(1, 1, 1), material: materials.mirror },
     { type: "sphere", rot: noRot, pos: new THREE.Vector3(3, 3, -6), scale: new THREE.Vector3(0.5, 3, 3), material: materials.turquoise },

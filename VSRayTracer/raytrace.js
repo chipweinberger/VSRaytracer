@@ -123,8 +123,6 @@ function trace(org, dest, recursive_depth, originating_obj) {
                     specStrength += theta * light.strength;
                     //should scale by ligth distance here
                     var distToLight = new THREE.Vector3().subVectors(intersection, light.pos).length();
-                    difStrength *= 1 / (distToLight); //not phyiscally correct
-                    specStrength *= 1 / (distToLight);
                 }
             }
         }
@@ -137,8 +135,7 @@ function trace(org, dest, recursive_depth, originating_obj) {
         phongColor.add(obj.material.spec.clone().multiplyScalar(specStrength));
         //if texture, use texture color as diffuse color
         if (obj.material.texture) {
-            var Ds = obj.material.diff.length();
-            phongColor.add(textureColor.clone().multiplyScalar(difStrength).multiplyScalar(Ds));
+            phongColor.add(textureColor.clone().multiplyScalar(difStrength));
         }
         else {
             phongColor.add(obj.material.diff.clone().multiplyScalar(difStrength));
