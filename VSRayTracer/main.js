@@ -289,7 +289,7 @@ var rotX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), M
 var prevObjs = [
     { type: "plane", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
     //{ type: "cone",     rot:  noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(.1, .1, .1), material: materials.redplastic },
-    { type: "cylinder", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(2, 2, 2), material: materials.redplastic },
+    { type: "cylinder", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.redplastic },
 ];
 function switchScene() {
     var temp1 = prevLights;

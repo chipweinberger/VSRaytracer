@@ -243,11 +243,13 @@ function getIntersection(obj, org, dest) {
             var a = dir.length() * dir.length();
             var b = org.dot(dir);
             var c = (org.length() * org.length()) - 1;
+            var disc = (b * b) - (a * c);
             break;
         case "cylinder":
             var a = (dir.x * dir.x) + (dir.y * dir.y);
-            var b = 2 * (org.x * dir.x + org.y * dir.y);
+            var b = (2 * (org.x * dir.x)) + (2 * (org.y * dir.y));
             var c = (org.x * org.x) + (org.y * org.y) - 1;
+            var disc = (b * b) - (4 * (a * c));
             break;
         case "cone":
             var a = (dir.x * dir.x) + (dir.y * dir.y) - (dir.z * dir.z);
@@ -264,7 +266,6 @@ function getIntersection(obj, org, dest) {
             }
             break;
     }
-    var disc = (b * b) - (a * c);
     if (disc > 0) {
         var t0 = (-b) / a + Math.sqrt(b * b - a * c) / (a);
         var t1 = (-b) / a - Math.sqrt(b * b - a * c) / (a);
@@ -304,7 +305,7 @@ function getNormal(obj, dest, intersection) {
         case "cylinder":
             var invTrans = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z)).transpose();
             var t = new THREE.Vector3(obj.x, obj.y, 0);
-            return new THREE.Vector3().subVectors(intersection, t).applyMatrix4(rotT).applyMatrix4(invTrans).normalize();
+            return new THREE.Vector3().subVectors(t, intersection).applyMatrix4(rotT).applyMatrix4(invTrans).normalize();
             break;
         case "plane":
             return new THREE.Vector3(0, 1, 0);
