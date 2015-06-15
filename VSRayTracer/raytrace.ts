@@ -161,6 +161,15 @@ function trace(org, dest, recursive_depth, originating_obj=null) {
 
         var difStrength = 0.0
         var specStrength = 0.0
+
+
+        //hack to fix my area light
+        if (lights.length > 3) {
+            lights = lights.slice(0,3)
+            addAreaLight(new THREE.Vector3(-2, 5, -3), null, 1, new THREE.Vector3(1, 1, 1), 1, 3, true)
+        }
+
+
         for (var j in lights) {
 
             var light = lights[j]
@@ -336,6 +345,8 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
     var dest = dest.clone().sub(obj.pos).applyMatrix4(rotT).applyMatrix4(invScale)
     var dir = new THREE.Vector3().subVectors(dest, org).normalize()
 
+    var z = null;
+
     switch (obj.type) {
         case "sphere":
 
@@ -352,15 +363,18 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
             var a = (dir.x * dir.x) + (dir.y * dir.y)
             var b = (2 * (org.x * dir.x))  + (2 * (org.y * dir.y))
             var c = (org.x * org.x) + (org.y * org.y) - 1
-            var disc = (b * b) - ( 4 * (a * c))
+            var disc = (b * b) - (4 * (a * c))
+            z = 1
 
             break;
 
         case "cone":
 
             var a = (dir.x * dir.x) + (dir.y * dir.y) - (dir.z*dir.z)
-            var b = 2 * (org.x * dir.x + org.y * dir.y - org.z * dir.z)
-            var c = (org.x * org.x) + (org.y * org.y) - (org.z*org.z)
+            var b = (2* (org.x * dir.x)) + (2* (org.y * dir.y)) - (2*(org.z * dir.z))
+            var c = (org.x * org.x) + (org.y * org.y) - (org.z * org.z)
+
+            var disc = (b * b) - (4 * (a * c))
 
             break;
 
@@ -397,7 +411,10 @@ function getIntersection(obj, org: THREE.Vector3, dest: THREE.Vector3): any {
             if (len0 < len1) return p0
             else return p1
         } else {
-            return candidates[0]
+            if (candidates.length == 1)
+                return candidates[0]
+            else
+                return null
         }
     } else {
         return null
@@ -419,13 +436,13 @@ function getNormal(obj, dest, intersection): THREE.Vector3{
             break;
         case "cylinder":
             var invTrans = new THREE.Matrix4().getInverse(new THREE.Matrix4().makeScale(obj.scale.x, obj.scale.y, obj.scale.z)).transpose()
-            var t = new THREE.Vector3(obj.x, obj.y, 0)
-            return new THREE.Vector3().subVectors(t, intersection).applyMatrix4(rotT).applyMatrix4(invTrans).normalize()
+            var t = new THREE.Vector3(obj.pos.x,  obj.pos.y, intersection.z)
+            return new THREE.Vector3().subVectors(intersection, t).applyMatrix4(rotT).applyMatrix4(invTrans).normalize()
             break;
         case "plane":
             return new THREE.Vector3(0,1,0)
             break;
     }
 
-    return new THREE.Vector3(1,1,1)
+    return new THREE.Vector3(1,0,1)
 }

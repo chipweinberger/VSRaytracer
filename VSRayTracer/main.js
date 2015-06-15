@@ -64,7 +64,7 @@ var materials = {
     },
     wood: {
         emit: new THREE.Vector3(0, 0, 0),
-        amb: new THREE.Vector3(.1, .1, .1),
+        amb: new THREE.Vector3(0, 0, 0),
         diff: new THREE.Vector3(1, 1, 1),
         spec: new THREE.Vector3(.7, .7, .7),
         mirror: new THREE.Vector3(.4, .4, .4),
@@ -144,7 +144,7 @@ function togglePointLight2() {
 }
 var lights = [
     {
-        pos: new THREE.Vector3(2, 2, 0),
+        pos: new THREE.Vector3(2, 2.5, 0),
         color: new THREE.Vector3(1, 1, 1),
         strength: 1.8,
         on: true,
@@ -279,16 +279,28 @@ window.addEventListener("keydown", function (ev) {
 // the next scene
 var prevLights = [
     {
-        pos: new THREE.Vector3(2, 2, 0),
+        pos: new THREE.Vector3(2, 2.5, 0),
         color: new THREE.Vector3(1, 1, 1),
-        strength: .8,
+        strength: 1.8,
         on: true,
+    },
+    {
+        pos: new THREE.Vector3(-6, 10, -8),
+        color: new THREE.Vector3(1, 1, 0),
+        strength: 1.8,
+        on: false,
+    },
+    {
+        pos: new THREE.Vector3(-2, 2, -3),
+        color: new THREE.Vector3(1, 1, 1),
+        strength: 1.8,
+        on: false,
     }
 ];
 var rotX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
 var prevObjs = [
     { type: "plane", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.wood },
-    //{ type: "cone",     rot:  noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(.1, .1, .1), material: materials.redplastic },
+    //{ type: "cone",     rot:  noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.redplastic },
     { type: "cylinder", rot: noRot, pos: new THREE.Vector3(0, 0, 0), scale: new THREE.Vector3(1, 1, 1), material: materials.redplastic },
 ];
 function switchScene() {
