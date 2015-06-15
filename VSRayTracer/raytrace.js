@@ -1,7 +1,7 @@
 //# sourceMappingURL=app.js.map
 /// <reference path="main.ts"/>
 var canvs = document.getElementById("raytrace");
-var rayTrace_fov = MAIN_fov * 1.2;
+var rayTrace_fov = MAIN_fov * 1;
 function initRaytrace() {
 }
 var antialiasing = {
@@ -15,14 +15,18 @@ function raytrace() {
     //dir to upper left
     var RotXbig = new THREE.Matrix4().makeRotationY(-THREE.Math.degToRad(rayTrace_fov / 2));
     var RotYbig = new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(rayTrace_fov / 2));
+    var RotXbigNegative = new THREE.Matrix4().makeRotationY(THREE.Math.degToRad(rayTrace_fov / 2));
+    var RotYbigNegative = new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(-rayTrace_fov / 2));
     var RotXYbig = new THREE.Matrix4().multiplyMatrices(RotXbig, RotYbig);
-    var upper_left = new THREE.Vector3(0, 0, -1).applyMatrix4(RotXYbig);
+    var upper_left = new THREE.Vector3(0, 0, -1).applyMatrix4(RotYbig).applyMatrix4(RotXbig);
+    var upper_right = new THREE.Vector3(0, 0, -1).applyMatrix4(RotYbig).applyMatrix4(RotXbigNegative);
+    var lower_left = new THREE.Vector3(0, 0, -1).applyMatrix4(RotYbigNegative).applyMatrix4(RotXbig);
     //shoot rays
     for (var x = 0; x < width; x++) {
-        pendingRayTraces.push(window.setTimeout(raytraceBlocking, 0, x, width, height, upper_left));
+        pendingRayTraces.push(window.setTimeout(raytraceBlocking, 0, x, width, height, upper_left, upper_right, lower_left));
     }
 }
-function raytraceBlocking(x, width, height, upper_left) {
+function raytraceBlocking(x, width, height, upper_left, upper_right, lower_left) {
     for (var y = 0; y < height; y++) {
         var avg_pix = new THREE.Vector3(0, 0, 0);
         //antialiasing
@@ -38,12 +42,11 @@ function raytraceBlocking(x, width, height, upper_left) {
                     x2 = THREE.Math.randFloat(x2, x2 + step);
                     y2 = THREE.Math.randFloat(y2, y2 + step);
                 }
-                var degX = x2 / width * rayTrace_fov;
-                var degY = y2 / width * rayTrace_fov;
-                var RotX = new THREE.Matrix4().makeRotationY(THREE.Math.degToRad(degX));
-                var RotY = new THREE.Matrix4().makeRotationX(-THREE.Math.degToRad(degY));
-                var RotXY = new THREE.Matrix4().multiplyMatrices(RotY, RotX); //opposite order
-                var dest = upper_left.clone().applyMatrix4(RotXY);
+                var shiftRightDif = new THREE.Vector3().subVectors(upper_left, upper_right);
+                var shiftDownDif = new THREE.Vector3().subVectors(upper_left, lower_left);
+                var shiftRightAmt = shiftRightDif.multiplyScalar(-x2 / width);
+                var shiftDownAmt = shiftDownDif.multiplyScalar(-y2 / height);
+                var dest = new THREE.Vector3().addVectors(upper_left, shiftRightAmt).add(shiftDownAmt);
                 //apply view matrix
                 org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_rayTraceRot));
                 org.applyMatrix4(new THREE.Matrix4().getInverse(MAIN_transMatrix));
