@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <title>Charles Weinberger Raytracer</title>
 </head>
-<body onload="main()">
+
+#initialize
+<body onload="init()">
 
     <img hidden id="wood" class="texture" src="wood.jpg">
     <img hidden id="tiger" class="texture" src="tiger.png">
@@ -36,7 +38,7 @@
 
         <button onclick="switchScene()">SwitchScene</button>
 
-        <button onclick="for (var i = 0; i < pendingRayTraces.length; i++) { clearTimeout(pendingRayTraces[i]); } pendingRayTraces = []; raytrace();">Raytrace</button>
+        <button onclick="for (var i = 0; i < num_webworkers; i++) { if (webworkers[i]) webworkers[i].terminate(); } raytrace();">Raytrace</button>
 
     </div>
 
@@ -61,15 +63,10 @@
     #
     #anything shared between both raytrace.js and webgl.js is put here
     #
-    <script>
-
-
-
-    </script>
-    
-    
     <script src="main.js"></script>			
     <script src="raytrace.js"></script>
-    <script src="webgl.js"></script>				
+    <script src="webgl.js"></script>
+    
+    			
 </body>
 </html>

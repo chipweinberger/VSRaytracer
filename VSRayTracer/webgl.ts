@@ -35,7 +35,7 @@ function initWebgl() {
     camera = new THREE.Camera();
     scene.add(camera)
 
-    camera.projectionMatrix = MAIN_viewMatrix
+    camera.projectionMatrix = main.MAIN_viewMatrix
 
 
     for (var i in object_list) {
@@ -79,7 +79,7 @@ function renderWebgl() {
     }
 
 
-    camera.projectionMatrix = MAIN_viewMatrix
+    camera.projectionMatrix = main.MAIN_viewMatrix
 
     renderer.render(scene, camera);
 

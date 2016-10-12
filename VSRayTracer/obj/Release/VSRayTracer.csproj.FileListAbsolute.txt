@@ -1,0 +1,5 @@
+C:\Users\Chip\Desktop\dev\other\VSRaytracer\VSRayTracer\bin\VSRayTracer.dll.config
+C:\Users\Chip\Desktop\dev\other\VSRaytracer\VSRayTracer\bin\VSRayTracer.dll
+C:\Users\Chip\Desktop\dev\other\VSRaytracer\VSRayTracer\bin\VSRayTracer.pdb
+C:\Users\Chip\Desktop\dev\other\VSRaytracer\VSRayTracer\obj\Release\VSRayTracer.dll
+C:\Users\Chip\Desktop\dev\other\VSRaytracer\VSRayTracer\obj\Release\VSRayTracer.pdb

@@ -11,15 +11,12 @@ function initWebgl() {
     camera.up.set = new THREE.Vector3(0, 0, -1);
     camera.lookAt(new THREE.Vector3(0, 0, -1));
     console.log(camera.projectionMatrix);
-    // renderer
     renderer = new THREE.WebGLRenderer({ canvas: canvas });
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-    // scene
     scene = new THREE.Scene();
-    // camera
     camera = new THREE.Camera();
     scene.add(camera);
-    camera.projectionMatrix = MAIN_viewMatrix;
+    camera.projectionMatrix = main.MAIN_viewMatrix;
     for (var i in object_list) {
         var obj = object_list[i];
         switch (obj.type) {
@@ -54,7 +51,6 @@ function renderWebgl() {
         var light = sph.assoc_light;
         sph.position.set(light.pos.x, light.pos.y, light.pos.z);
     }
-    camera.projectionMatrix = MAIN_viewMatrix;
+    camera.projectionMatrix = main.MAIN_viewMatrix;
     renderer.render(scene, camera);
 }
-//# sourceMappingURL=webgl.js.map

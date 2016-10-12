@@ -1,22 +1,18 @@
-/// <reference path="webgl.ts"/>
-/// <reference path="raytrace.ts"/>
-//default parameters shared by raytracer and webgl
-var MAIN_pos = new THREE.Vector3(-1, 4, 10);
-var MAIN_at = new THREE.Vector3(0, 0, -200).normalize();
-var MAIN_up = new THREE.Vector3(0, 200, 0).normalize();
-var MAIN_fov = 45;
-var MAIN_transMatrix = new THREE.Matrix4().makeTranslation(-MAIN_pos.x, -MAIN_pos.y, -MAIN_pos.z);
-var MAIN_rotMatrix = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), MAIN_at, MAIN_up);
-var MAIN_rotTransMatrix = MAIN_rotMatrix.clone().multiply(MAIN_transMatrix);
-//for some reason I cant get the ray trace to match with the inverse alone
-var MAIN_rayTraceAt = new THREE.Vector3(0, 0, -200).normalize();
-var MAIN_rayTraceUp = new THREE.Vector3(0, 200, 0).normalize();
-var MAIN_rayTraceRot = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), MAIN_rayTraceAt, MAIN_rayTraceUp);
-var MAIN_perspective = new THREE.Matrix4().makePerspective(MAIN_fov, 1, 0.1, 1000);
-var MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix);
-var MAIN_maxRecursion = 2;
-//where the textures will be loaded
-var MAIN_textures = {};
+main = [];
+main['MAIN_pos'] = new THREE.Vector3(-1, 4, 10);
+main['MAIN_at'] = new THREE.Vector3(0, 0, -200).normalize();
+main['MAIN_up'] = new THREE.Vector3(0, 200, 0).normalize();
+main['MAIN_fov'] = 45;
+main['MAIN_transMatrix'] = new THREE.Matrix4().makeTranslation(-main.MAIN_pos.x, -main.MAIN_pos.y, -main.MAIN_pos.z);
+main['MAIN_rotMatrix'] = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), main.MAIN_at, main.MAIN_up);
+main['MAIN_rotTransMatrix'] = main.MAIN_rotMatrix.clone().multiply(main.MAIN_transMatrix);
+main['MAIN_rayTraceAt'] = new THREE.Vector3(0, 0, -200).normalize();
+main['MAIN_rayTraceUp'] = new THREE.Vector3(0, 200, 0).normalize();
+main['MAIN_rayTraceRot'] = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), main.MAIN_rayTraceAt, main.MAIN_rayTraceUp);
+main['MAIN_perspective'] = new THREE.Matrix4().makePerspective(main.MAIN_fov, 1, 0.1, 1000);
+main['MAIN_viewMatrix'] = main.MAIN_perspective.clone().multiply(main.MAIN_rotTransMatrix);
+main['MAIN_maxRecursion'] = 2;
+main['MAIN_textures'] = [];
 var materials = {
     redplastic: {
         emit: new THREE.Vector3(0, 0, 0),
@@ -104,7 +100,7 @@ function addAreaLight(pos, dir, length, color, strength, samples, jittered) {
                 var px = x + Math.random();
                 var py = y + Math.random();
             }
-            positions.push(new THREE.Vector3(px / samples * length, py / samples * length, 0)); //unscaled length of one
+            positions.push(new THREE.Vector3(px / samples * length, py / samples * length, 0));
         }
     }
     for (var i in positions) {
@@ -118,17 +114,29 @@ function addAreaLight(pos, dir, length, color, strength, samples, jittered) {
         var intensity = strength / (samples * samples);
         lights.push({ pos: pos, color: color, strength: intensity, on: true });
     }
+    if (update_webworker_MAIN) {
+        update_webworker_MAIN();
+    }
 }
 function togglePointLight0() {
     lights[0].on = !lights[0].on;
+    if (update_webworker_MAIN) {
+        update_webworker_MAIN();
+    }
     return lights[0].on;
 }
 function togglePointLight1() {
     lights[1].on = !lights[1].on;
+    if (update_webworker_MAIN) {
+        update_webworker_MAIN();
+    }
     return lights[1].on;
 }
 function togglePointLight2() {
     lights[2].on = !lights[2].on;
+    if (update_webworker_MAIN) {
+        update_webworker_MAIN();
+    }
     return lights[2].on;
 }
 var lights = [
@@ -183,86 +191,82 @@ window.addEventListener("keydown", function (ev) {
             raytrace();
             break;
         case 39:
-            MAIN_rayTraceAt.applyAxisAngle(MAIN_up, rotSpeed);
-            MAIN_at.applyAxisAngle(MAIN_up, rotSpeed);
+            main.MAIN_rayTraceAt.applyAxisAngle(main.MAIN_up, rotSpeed);
+            main.MAIN_at.applyAxisAngle(main.MAIN_up, rotSpeed);
             break;
         case 37:
-            MAIN_rayTraceAt.applyAxisAngle(MAIN_up, -rotSpeed);
-            MAIN_at.applyAxisAngle(MAIN_up, -rotSpeed);
+            main.MAIN_rayTraceAt.applyAxisAngle(main.MAIN_up, -rotSpeed);
+            main.MAIN_at.applyAxisAngle(main.MAIN_up, -rotSpeed);
             break;
         case 38:
-            //raytrace
-            var perpendicular = new THREE.Vector3().crossVectors(MAIN_rayTraceAt, MAIN_rayTraceUp).normalize();
-            MAIN_rayTraceAt.applyAxisAngle(perpendicular, rotSpeed);
-            MAIN_rayTraceUp.applyAxisAngle(perpendicular, rotSpeed);
-            //webgl
-            var perpendicular = new THREE.Vector3().crossVectors(MAIN_at, MAIN_up).normalize();
-            MAIN_at.applyAxisAngle(perpendicular, rotSpeed);
-            MAIN_up.applyAxisAngle(perpendicular, rotSpeed);
+            var perpendicular = new THREE.Vector3().crossVectors(main.MAIN_rayTraceAt, main.MAIN_rayTraceUp).normalize();
+            main.MAIN_rayTraceAt.applyAxisAngle(perpendicular, rotSpeed);
+            main.MAIN_rayTraceUp.applyAxisAngle(perpendicular, rotSpeed);
+            var perpendicular = new THREE.Vector3().crossVectors(main.MAIN_at, main.MAIN_up).normalize();
+            main.MAIN_at.applyAxisAngle(perpendicular, rotSpeed);
+            main.MAIN_up.applyAxisAngle(perpendicular, rotSpeed);
             break;
         case 40:
-            //raytrace
-            var perpendicular = new THREE.Vector3().crossVectors(MAIN_rayTraceAt, MAIN_rayTraceUp).normalize();
-            MAIN_rayTraceAt.applyAxisAngle(perpendicular, -rotSpeed);
-            MAIN_rayTraceUp.applyAxisAngle(perpendicular, -rotSpeed);
-            //webgl
-            var perpendicular = new THREE.Vector3().crossVectors(MAIN_at, MAIN_up).normalize();
-            MAIN_at.applyAxisAngle(perpendicular, -rotSpeed);
-            MAIN_up.applyAxisAngle(perpendicular, -rotSpeed);
+            var perpendicular = new THREE.Vector3().crossVectors(main.MAIN_rayTraceAt, main.MAIN_rayTraceUp).normalize();
+            main.MAIN_rayTraceAt.applyAxisAngle(perpendicular, -rotSpeed);
+            main.MAIN_rayTraceUp.applyAxisAngle(perpendicular, -rotSpeed);
+            var perpendicular = new THREE.Vector3().crossVectors(main.MAIN_at, main.MAIN_up).normalize();
+            main.MAIN_at.applyAxisAngle(perpendicular, -rotSpeed);
+            main.MAIN_up.applyAxisAngle(perpendicular, -rotSpeed);
             break;
         case 65:
             if (controls[current] == "camera")
-                MAIN_transMatrix.multiply(transX);
+                main.MAIN_transMatrix.multiply(transX);
             else
                 currentLight.pos.x += .2;
             break;
         case 90:
             if (controls[current] == "camera")
-                MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transX));
+                main.MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transX));
             else
                 currentLight.pos.x -= .2;
             break;
         case 83:
             if (controls[current] == "camera")
-                MAIN_transMatrix.multiply(transY);
+                main.MAIN_transMatrix.multiply(transY);
             else
                 currentLight.pos.y += .2;
             break;
         case 88:
             if (controls[current] == "camera")
-                MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transY));
+                main.MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transY));
             else
                 currentLight.pos.y -= .2;
             break;
         case 68:
             if (controls[current] == "camera")
-                MAIN_transMatrix.multiply(transZ);
+                main.MAIN_transMatrix.multiply(transZ);
             else
                 currentLight.pos.z += .2;
             break;
         case 67:
             if (controls[current] == "camera")
-                MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transZ));
+                main.MAIN_transMatrix.multiply(new THREE.Matrix4().getInverse(transZ));
             else
                 currentLight.pos.z -= .2;
             break;
         case 70:
-            MAIN_rayTraceUp.applyAxisAngle(MAIN_rayTraceAt, rotSpeed);
-            MAIN_up.applyAxisAngle(MAIN_at, rotSpeed);
+            main.MAIN_rayTraceUp.applyAxisAngle(main.MAIN_rayTraceAt, rotSpeed);
+            main.MAIN_up.applyAxisAngle(main.MAIN_at, rotSpeed);
             break;
         case 86:
-            MAIN_rayTraceUp.applyAxisAngle(MAIN_rayTraceAt, -rotSpeed);
-            MAIN_up.applyAxisAngle(MAIN_at, -rotSpeed);
+            main.MAIN_rayTraceUp.applyAxisAngle(main.MAIN_rayTraceAt, -rotSpeed);
+            main.MAIN_up.applyAxisAngle(main.MAIN_at, -rotSpeed);
             break;
     }
-    //for some reason I cant get the ray trace matrix to match - found out the reason. My tracing was left to right not right to left.
-    MAIN_rayTraceRot = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), MAIN_rayTraceAt, MAIN_rayTraceUp);
-    //set view matrix
-    MAIN_rotMatrix = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), MAIN_at, MAIN_up);
-    MAIN_rotTransMatrix = MAIN_rotMatrix.clone().multiply(MAIN_transMatrix);
-    MAIN_viewMatrix = MAIN_perspective.clone().multiply(MAIN_rotTransMatrix);
+    main.MAIN_rayTraceRot = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), main.MAIN_rayTraceAt, main.MAIN_rayTraceUp);
+    main.MAIN_rotMatrix = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), main.MAIN_at, main.MAIN_up);
+    main.MAIN_rotTransMatrix = main.MAIN_rotMatrix.clone().multiply(main.MAIN_transMatrix);
+    main.MAIN_viewMatrix = main.MAIN_perspective.clone().multiply(main.MAIN_rotTransMatrix);
+    if (update_webworker_MAIN) {
+        update_webworker_MAIN();
+    }
 });
-// the next scene
 var prevLights = [
     {
         pos: new THREE.Vector3(2, 2, 0),
@@ -283,6 +287,9 @@ function switchScene() {
     prevObjs = object_list;
     lights = prevLights;
     object_list = prevObjs;
+    if (update_webworker_MAIN) {
+        update_webworker_MAIN();
+    }
 }
 function draw() {
     renderWebgl();
@@ -298,17 +305,15 @@ function loadTextures() {
             canvas.width = img.width;
             var context = canvas.getContext('2d');
             context.drawImage(img, 0, 0);
-            MAIN_textures[img.id] = context.getImageData(0, 0, img.width, img.height);
+            main.MAIN_textures[img.id] = context.getImageData(0, 0, img.width, img.height);
         }
         finally {
             continue;
         }
     }
 }
-function main() {
+function init() {
     loadTextures();
     initWebgl();
-    initRaytrace();
     window.requestAnimationFrame(draw);
 }
-//# sourceMappingURL=main.js.map
